@@ -1,0 +1,38 @@
+# Git attributes for BBS.land webterm-dos-ansi
+
+# ANSI art files (.ans, .asc) are binary files with CP437 encoding
+# Do not perform line ending conversion or text diffs
+*.ans binary
+*.asc binary
+
+# Font files are binary
+*.bin binary
+*.f14 binary
+*.fnt binary
+
+# WebAssembly binaries
+*.wasm binary
+
+# Ensure shell scripts have LF line endings (Unix)
+*.sh text eol=lf
+
+# Markdown and documentation use LF
+*.md text eol=lf
+*.txt text eol=lf
+
+# Rust source files use LF
+*.rs text eol=lf
+*.toml text eol=lf
+
+# JavaScript/TypeScript use LF
+*.js text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+
+# HTML/CSS use LF
+*.html text eol=lf
+*.css text eol=lf
+
+# Config files use LF
+.gitignore text eol=lf
+.gitattributes text eol=lf

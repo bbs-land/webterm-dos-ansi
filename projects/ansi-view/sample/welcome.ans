@@ -1,25 +1,17 @@
-[2J[1;37;44m                    BBS.land WebTerm                    [0m
+[2J[H[1;37;44m                    BBS.land WebTerm                    [0m
 
-[1;36mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ                                                            บ
-บ  [1;37mWelcome to the ANSI Art Viewer[1;36m                            บ
-บ                                                            บ
-บ  [0;37mThis is a demonstration of CP437 ANSI rendering[1;36m          บ
-บ  [0;37mwith authentic DOS terminal colors and fonts.[1;36m            บ
-บ                                                            บ
-ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[1;36mษอออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ  [1;33mWelcome to the DOS ANSI Terminal Viewer[1;36m  บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
-[1;33mFeatures:[0m
-  [32m๛[0m Full CP437 character set support
-  [32m๛[0m VT-100/VT-102 escape sequences
-  [32m๛[0m 16-color ANSI palette
-  [32m๛[0m Authentic EGA 8x14 font rendering
-  [32m๛[0m Baud rate simulation (300-57600 bps)
+[1;37mThis is a sample ANSI art file demonstrating:[0m
 
-[1;35mColor Test:[0m
-[30;40m Black   [31;40m Red     [32;40m Green   [33;40m Yellow  [0m
-[34;40m Blue    [35;40m Magenta [36;40m Cyan    [37;40m White   [0m
-[1;30;40m Gray    [1;31;40m Lt Red  [1;32;40m Lt Green[1;33;40m Lt Yel  [0m
-[1;34;40m Lt Blue [1;35;40m Lt Mag  [1;36;40m Lt Cyan [1;37;40m Bright  [0m
+  [32mþ[0m CP437 character encoding
+  [32mþ[0m ANSI color sequences
+  [32mþ[0m Box drawing characters
+  [32mþ[0m EGA 8x14 font rendering
 
-[1;37mPress [1;32m[F1][1;37m for help  [1;33m[1;37m  [1;32m[ESC][1;37m to quit[0m
+[1;35mColors:[0m
+[40m [41m [42m [43m [44m [45m [46m [47m [0m [1;30mÛ[1;31mÛ[1;32mÛ[1;33mÛ[1;34mÛ[1;35mÛ[1;36mÛ[1;37mÛ[0m
+
+[1;36mShade Characters:[0m ฐฐฐ ฑฑฑ ฒฒฒ ÛÛÛ

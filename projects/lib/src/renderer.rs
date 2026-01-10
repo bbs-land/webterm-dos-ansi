@@ -5,8 +5,9 @@
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, ImageData};
 
+use crate::font;
 use crate::screen::Screen;
 
 /// Terminal renderer that draws to a canvas.
@@ -28,15 +29,11 @@ impl Renderer {
 
     /// Render the screen buffer to the canvas.
     pub fn render(&self, screen: &Screen) -> Result<(), JsValue> {
-        // Clear canvas
+        // Clear canvas to black
         self.context.set_fill_style_str("#000000");
         self.context.fill_rect(0.0, 0.0, 1920.0, 1400.0);
 
-        // TODO: Render each character cell
-        // For now, just draw a test pattern
-        self.context.set_fill_style_str("#00FF00");
-        self.context.fill_rect(10.0, 10.0, 100.0, 100.0);
-
+        // Render each character cell
         let (width, height) = screen.dimensions();
         for y in 0..height {
             for x in 0..width {
@@ -52,47 +49,85 @@ impl Renderer {
     /// Render a single character cell.
     fn render_cell(&self, x: usize, y: usize, cell: &crate::screen::Cell) -> Result<(), JsValue> {
         // Each character is 8x14 pixels, scaled to 24x56 (3x4)
-        let cell_width = 24.0;
-        let cell_height = 56.0;
-        let px = x as f64 * cell_width;
-        let py = y as f64 * cell_height;
+        const SCALE_X: usize = 3;
+        const SCALE_Y: usize = 4;
+        const CELL_WIDTH: usize = font::FONT_WIDTH * SCALE_X;  // 24
+        const CELL_HEIGHT: usize = font::FONT_HEIGHT * SCALE_Y; // 56
 
-        // Draw background
-        let bg_color = ansi_color_to_rgb(cell.bg);
-        self.context.set_fill_style_str(&bg_color);
-        self.context.fill_rect(px, py, cell_width, cell_height);
+        let px = x * CELL_WIDTH;
+        let py = y * CELL_HEIGHT;
 
-        // TODO: Draw character glyph from EGA font
-        // For now, draw a placeholder rectangle for non-space characters
-        if cell.ch != b' ' {
-            let fg_color = ansi_color_to_rgb(cell.fg);
-            self.context.set_fill_style_str(&fg_color);
-            self.context.fill_rect(px + 4.0, py + 8.0, 16.0, 40.0);
+        // Get font bitmap for this character
+        let bitmap = font::get_char_bitmap(cell.ch);
+
+        // Get foreground and background colors as RGB tuples
+        let fg_rgb = ansi_color_to_rgb_tuple(cell.fg);
+        let bg_rgb = ansi_color_to_rgb_tuple(cell.bg);
+
+        // Create ImageData for this cell (24x56 pixels, RGBA format)
+        let mut pixel_data: Vec<u8> = Vec::with_capacity(CELL_WIDTH * CELL_HEIGHT * 4);
+
+        // Render each scanline of the character
+        for font_y in 0..font::FONT_HEIGHT {
+            let scanline = bitmap[font_y];
+
+            // Each font scanline is rendered SCALE_Y times vertically
+            for _ in 0..SCALE_Y {
+                // Render each pixel in the scanline
+                for font_x in 0..font::FONT_WIDTH {
+                    let is_set = font::is_pixel_set(scanline, font_x as u8);
+                    let (r, g, b) = if is_set { fg_rgb } else { bg_rgb };
+
+                    // Each font pixel is rendered SCALE_X times horizontally
+                    for _ in 0..SCALE_X {
+                        pixel_data.push(r);
+                        pixel_data.push(g);
+                        pixel_data.push(b);
+                        pixel_data.push(255); // Alpha
+                    }
+                }
+            }
         }
+
+        // Create ImageData and put it on the canvas
+        let image_data = ImageData::new_with_u8_clamped_array_and_sh(
+            wasm_bindgen::Clamped(&pixel_data),
+            CELL_WIDTH as u32,
+            CELL_HEIGHT as u32,
+        )?;
+
+        self.context.put_image_data(&image_data, px as f64, py as f64)?;
 
         Ok(())
     }
 }
 
-/// Convert ANSI color code (0-15) to RGB hex string.
-fn ansi_color_to_rgb(color: u8) -> String {
+/// Convert ANSI color code (0-15) to RGB tuple (r, g, b).
+fn ansi_color_to_rgb_tuple(color: u8) -> (u8, u8, u8) {
     match color {
-        0 => "#000000".to_string(),  // Black
-        1 => "#AA0000".to_string(),  // Red
-        2 => "#00AA00".to_string(),  // Green
-        3 => "#AA5500".to_string(),  // Yellow
-        4 => "#0000AA".to_string(),  // Blue
-        5 => "#AA00AA".to_string(),  // Magenta
-        6 => "#00AAAA".to_string(),  // Cyan
-        7 => "#AAAAAA".to_string(),  // White
-        8 => "#555555".to_string(),  // Bright Black (Gray)
-        9 => "#FF5555".to_string(),  // Bright Red
-        10 => "#55FF55".to_string(), // Bright Green
-        11 => "#FFFF55".to_string(), // Bright Yellow
-        12 => "#5555FF".to_string(), // Bright Blue
-        13 => "#FF55FF".to_string(), // Bright Magenta
-        14 => "#55FFFF".to_string(), // Bright Cyan
-        15 => "#FFFFFF".to_string(), // Bright White
-        _ => "#AAAAAA".to_string(),  // Default to white
+        0 => (0x00, 0x00, 0x00),  // Black
+        1 => (0xAA, 0x00, 0x00),  // Red
+        2 => (0x00, 0xAA, 0x00),  // Green
+        3 => (0xAA, 0x55, 0x00),  // Yellow
+        4 => (0x00, 0x00, 0xAA),  // Blue
+        5 => (0xAA, 0x00, 0xAA),  // Magenta
+        6 => (0x00, 0xAA, 0xAA),  // Cyan
+        7 => (0xAA, 0xAA, 0xAA),  // White
+        8 => (0x55, 0x55, 0x55),  // Bright Black (Gray)
+        9 => (0xFF, 0x55, 0x55),  // Bright Red
+        10 => (0x55, 0xFF, 0x55), // Bright Green
+        11 => (0xFF, 0xFF, 0x55), // Bright Yellow
+        12 => (0x55, 0x55, 0xFF), // Bright Blue
+        13 => (0xFF, 0x55, 0xFF), // Bright Magenta
+        14 => (0x55, 0xFF, 0xFF), // Bright Cyan
+        15 => (0xFF, 0xFF, 0xFF), // Bright White
+        _ => (0xAA, 0xAA, 0xAA),  // Default to white
     }
+}
+
+/// Convert ANSI color code (0-15) to RGB hex string.
+#[allow(dead_code)]
+fn ansi_color_to_rgb(color: u8) -> String {
+    let (r, g, b) = ansi_color_to_rgb_tuple(color);
+    format!("#{:02X}{:02X}{:02X}", r, g, b)
 }

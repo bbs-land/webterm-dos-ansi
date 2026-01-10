@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 
 mod cp437;
 mod dom;
+mod font;
 mod parser;
 mod renderer;
 mod screen;
