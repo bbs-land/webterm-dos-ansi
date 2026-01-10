@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "build": "deno run -A npm:vite build",
+    "dev": "deno run -A npm:vite",
+    "preview": "deno run -A npm:vite preview",
+    "wasm": "wasm-pack build --target web",
+    "wasm:dev": "wasm-pack build --target web --dev",
+    "test": "deno test",
+    "build:all": "wasm-pack build --target web && deno task build"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "dom.iterable"],
+    "types": ["./pkg/webterm_dos_ansi.d.ts"]
+  }
+}

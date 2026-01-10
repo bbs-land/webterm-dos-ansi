@@ -1,0 +1,24 @@
+[package]
+name = "websocket-connect"
+version = "0.1.0"
+authors = ["BBS.land"]
+edition = "2021"
+license = "ISC"
+description = "WebSocket to TCP bridge server for BBS connections"
+
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "trace", "cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

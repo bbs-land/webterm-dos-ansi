@@ -28,8 +28,24 @@ Rust and compiled to WASM for high-performance rendering in modern web browsers.
 
 ## Quick Start
 
-See [.claude/CLAUDE.md](.claude/CLAUDE.md) for complete documentation including
-architecture, API reference, build instructions, and development guidelines.
+### Building
+
+```bash
+# Build everything
+./_scripts/build-all.sh
+
+# Test the ANSI viewer
+cd dist/ansi-view
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
+
+### Documentation
+
+- [GETTING_STARTED.md](GETTING_STARTED.md) - Setup and build instructions
+- [.claude/CLAUDE.md](.claude/CLAUDE.md) - Complete project documentation
+- [BUILD_STATUS.md](BUILD_STATUS.md) - Current build status and roadmap
+- [_scripts/README.md](_scripts/README.md) - Build script documentation
 
 ## License
 

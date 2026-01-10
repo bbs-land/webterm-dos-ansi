@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANSI Art Viewer - BBS.land WebTerm</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>ANSI Art Viewer</h1>
+        <p>View CP437 ANSI files with authentic DOS terminal rendering</p>
+    </header>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="file-picker">
+                ANSI File:
+                <input
+                    type="file"
+                    id="file-picker"
+                    accept=".ans,.asc,.txt"
+                >
+            </label>
+
+            <label for="bps-selector">
+                Speed:
+                <select id="bps-selector">
+                    <option value="">Instant</option>
+                    <option value="300">300 bps (Very Slow)</option>
+                    <option value="1200">1200 bps (Slow)</option>
+                    <option value="2400">2400 bps (Normal)</option>
+                    <option value="9600" selected>9600 bps (Fast)</option>
+                    <option value="14400">14400 bps</option>
+                    <option value="28800">28800 bps</option>
+                    <option value="57600">57600 bps</option>
+                </select>
+            </label>
+
+            <button id="clear-btn">Clear</button>
+        </div>
+
+        <div class="sample-files">
+            <span>Sample files:</span>
+            <button class="sample-btn" data-sample="simple.ans">Simple</button>
+            <button class="sample-btn" data-sample="welcome.ans">Welcome</button>
+            <button class="sample-btn" data-sample="test.ans">Test Pattern</button>
+        </div>
+    </div>
+
+    <div id="viewer-container"></div>
+
+    <div class="info">
+        <p>
+            <strong>Note:</strong> Build the WASM library first:
+            <code>cd projects/lib && wasm-pack build --target web</code>
+        </p>
+        <p>
+            Then copy the WASM files to this directory:
+            <code>cp projects/lib/pkg/webterm_dos_ansi* projects/ansi-view/</code>
+        </p>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

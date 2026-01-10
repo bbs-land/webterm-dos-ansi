@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASM Test</title>
+    <style>
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            padding: 2rem;
+        }
+        #test-container {
+            margin: 2rem 0;
+            border: 1px solid #0f0;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebTerm WASM Test</h1>
+    <p>This page tests the WASM module directly.</p>
+
+    <div id="test-container"></div>
+
+    <script type="module">
+        import init, { renderAnsi } from './webterm_dos_ansi.js';
+
+        async function test() {
+            console.log('Initializing WASM...');
+            await init();
+            console.log('WASM initialized!');
+
+            // Simple test ANSI content
+            const testAnsi = new TextEncoder().encode(
+                '\x1b[1;37;44m  WebTerm Test  \x1b[0m\n\n' +
+                '\x1b[32mHello from WASM!\x1b[0m\n' +
+                '\x1b[33mThis is a test.\x1b[0m'
+            );
+
+            console.log('Rendering ANSI...');
+            renderAnsi('#test-container', testAnsi, null);
+            console.log('Done!');
+        }
+
+        test().catch(console.error);
+    </script>
+</body>
+</html>

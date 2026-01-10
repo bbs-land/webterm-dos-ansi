@@ -1,0 +1,45 @@
+[package]
+name = "webterm-dos-ansi"
+version = "0.1.0"
+authors = ["BBS.land"]
+edition = "2021"
+license = "ISC"
+description = "WebAssembly terminal emulator for DOS CP437 ANSI and BBS connectivity"
+repository = "https://github.com/bbs-land/webterm-dos-ansi"
+homepage = "https://bbs.land"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[dependencies]
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = [
+    "console",
+    "Window",
+    "Document",
+    "Element",
+    "HtmlElement",
+    "HtmlCanvasElement",
+    "CanvasRenderingContext2d",
+    "ImageData",
+    "CssStyleDeclaration",
+    "NodeList",
+    "EventTarget",
+    "Event",
+    "KeyboardEvent",
+    "MouseEvent",
+] }
+js-sys = "0.3"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Reduce number of codegen units to increase optimizations
+panic = "abort"     # Abort on panic
+strip = true        # Strip symbols from binary

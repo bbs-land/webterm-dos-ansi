@@ -1,0 +1,176 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: #1a1a1a;
+    color: #0f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: #111;
+    padding: 1.5rem;
+    border-bottom: 2px solid #0f0;
+    text-align: center;
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.controls {
+    background: #111;
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.control-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+input[type="file"] {
+    background: #000;
+    border: 1px solid #0f0;
+    color: #0f0;
+    padding: 0.4rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+    background: #0f0;
+    color: #000;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #0c0;
+}
+
+select {
+    background: #000;
+    border: 1px solid #0f0;
+    color: #0f0;
+    padding: 0.4rem 0.8rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+select option {
+    background: #000;
+    color: #0f0;
+}
+
+button {
+    background: #0f0;
+    color: #000;
+    border: none;
+    padding: 0.4rem 1rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #0c0;
+}
+
+button:disabled {
+    background: #555;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.sample-files {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sample-files span {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.sample-btn {
+    background: #333;
+    color: #0f0;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.sample-btn:hover {
+    background: #444;
+}
+
+#viewer-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: #000;
+    min-height: 600px;
+}
+
+#viewer-container:empty::before {
+    content: 'Select an ANSI file to view';
+    color: #555;
+    font-size: 1.2rem;
+}
+
+.info {
+    background: #111;
+    border-top: 1px solid #333;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.info p {
+    margin-bottom: 0.5rem;
+}
+
+.info code {
+    background: #000;
+    color: #0f0;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid #333;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 0.8rem;
+}
