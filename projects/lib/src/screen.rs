@@ -16,9 +16,6 @@ pub struct Cell {
     pub ch: u8,        // CP437 character code
     pub fg: u8,        // Foreground color (0-15)
     pub bg: u8,        // Background color (0-15)
-    pub bold: bool,
-    pub blink: bool,
-    pub reverse: bool,
 }
 
 impl Default for Cell {
@@ -27,9 +24,6 @@ impl Default for Cell {
             ch: b' ',
             fg: 7,  // White
             bg: 0,  // Black
-            bold: false,
-            blink: false,
-            reverse: false,
         }
     }
 }

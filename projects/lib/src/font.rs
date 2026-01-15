@@ -9,7 +9,6 @@ static EGA_8X14_FONT: &[u8] = include_bytes!("../fonts/ega-8x14.bin");
 /// Font dimensions
 pub const FONT_WIDTH: usize = 8;
 pub const FONT_HEIGHT: usize = 14;
-pub const FONT_CHAR_COUNT: usize = 256;
 pub const FONT_BYTES_PER_CHAR: usize = FONT_HEIGHT;
 
 /// Get the font data for a specific character
@@ -41,6 +40,8 @@ pub fn is_pixel_set(byte: u8, bit_position: u8) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const FONT_CHAR_COUNT: usize = 256;
 
     #[test]
     fn test_font_data_size() {

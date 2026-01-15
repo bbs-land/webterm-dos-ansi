@@ -12,7 +12,6 @@ use crate::screen::Screen;
 
 /// Terminal renderer that draws to a canvas.
 pub struct Renderer {
-    canvas: HtmlCanvasElement,
     context: CanvasRenderingContext2d,
 }
 
@@ -24,7 +23,7 @@ impl Renderer {
             .ok_or("Failed to get 2d context")?
             .dyn_into::<CanvasRenderingContext2d>()?;
 
-        Ok(Renderer { canvas, context })
+        Ok(Renderer { context })
     }
 
     /// Render the screen buffer to the canvas.
@@ -125,9 +124,3 @@ fn ansi_color_to_rgb_tuple(color: u8) -> (u8, u8, u8) {
     }
 }
 
-/// Convert ANSI color code (0-15) to RGB hex string.
-#[allow(dead_code)]
-fn ansi_color_to_rgb(color: u8) -> String {
-    let (r, g, b) = ansi_color_to_rgb_tuple(color);
-    format!("#{:02X}{:02X}{:02X}", r, g, b)
-}

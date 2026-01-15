@@ -176,13 +176,13 @@ impl AnsiParser {
 
     fn write_char(&self, ch: u8, screen: &mut Screen) {
         let (x, y) = screen.cursor_pos();
+        // Apply bold by using bright foreground color (add 8 if not already bright)
+        let fg = if self.reverse { self.current_bg } else { self.current_fg };
+        let fg = if self.bold && fg < 8 { fg + 8 } else { fg };
         let cell = Cell {
             ch,
-            fg: if self.reverse { self.current_bg } else { self.current_fg },
+            fg,
             bg: if self.reverse { self.current_fg } else { self.current_bg },
-            bold: self.bold,
-            blink: self.blink,
-            reverse: self.reverse,
         };
         screen.set_cell(x, y, cell);
 

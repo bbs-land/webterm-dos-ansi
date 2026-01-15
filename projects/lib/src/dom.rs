@@ -2,7 +2,7 @@
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
-use web_sys::{Document, Element, HtmlCanvasElement, HtmlElement, Window};
+use web_sys::{Document, Element, HtmlCanvasElement, Window};
 
 /// Get the window object.
 pub fn window() -> Result<Window, JsValue> {
@@ -63,10 +63,4 @@ pub fn query_selector_all(selector: &str) -> Result<Vec<Element>, JsValue> {
 /// Get the value of a data attribute from an element.
 pub fn get_data_attribute(element: &Element, attr: &str) -> Option<String> {
     element.get_attribute(&format!("data-{}", attr))
-}
-
-/// Append a child element to a parent.
-pub fn append_child(parent: &Element, child: &HtmlElement) -> Result<(), JsValue> {
-    parent.append_child(child)?;
-    Ok(())
 }
