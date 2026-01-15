@@ -6,15 +6,16 @@ WebAssembly terminal emulator library for rendering DOS CP437 ANSI art and conne
 
 ### From NPM (when published)
 
+#### npm:
 ```bash
 npm install @bbs/webterm-dos-ansi
 ```
 
-### Local Development
-
+#### deno:
 ```bash
-# Copy from dist/lib/ directory after building
-cp -r dist/lib node_modules/@bbs/webterm-dos-ansi
+deno install jsr:@bbs/webterm-dos-ansi
+# or
+deno install npm:@bbs/webterm-dos-ansi
 ```
 
 ## Usage

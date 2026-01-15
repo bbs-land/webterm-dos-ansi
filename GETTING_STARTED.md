@@ -13,8 +13,7 @@ The following has been set up:
 - ✅ Screen buffer (80×25 character grid)
 - ✅ Canvas renderer with color support
 - ✅ DOM manipulation utilities
-- ✅ Deno + Vite configuration
-- ✅ JavaScript WASM loader
+- ✅ Deno configuration for build tasks
 
 ### WebSocket Bridge Server (`projects/websocket-connect/`)
 - ✅ Axum-based WebSocket server
@@ -63,42 +62,20 @@ deno --version
 
 ## Building the Project
 
-### Quick Build (Recommended)
-
-Use the automated build script:
+### Build the WASM Library
 
 ```bash
 # From project root
-./_scripts/build-all.sh
+run/lib-build
 
-# This builds everything and creates a dist/ directory
-```
-
-Then test the viewer:
-
-```bash
-cd dist/ansi-view
-python3 -m http.server 8080
-# Open http://localhost:8080
-```
-
-### Manual Build (Alternative)
-
-#### Step 1: Build the WASM Library
-
-```bash
-cd projects/lib
-
-# Build the WASM module
-wasm-pack build --target web
-
-# This creates the pkg/ directory with:
+# This creates projects/lib/pkg/ with:
 # - webterm_dos_ansi.js
 # - webterm_dos_ansi_bg.wasm
 # - webterm_dos_ansi.d.ts
+# - package.json (npm package: @bbs/webterm-dos-ansi)
 ```
 
-#### Step 2: Test the ANSI Viewer
+### Test the ANSI Viewer
 
 ```bash
 # Copy WASM files to ansi-view
@@ -107,13 +84,12 @@ cp projects/lib/pkg/webterm_dos_ansi_bg.wasm projects/ansi-view/
 
 # Serve the ansi-view directory
 cd projects/ansi-view
-deno serve --port 8080 .
-# Or: python3 -m http.server 8080
+python3 -m http.server 8080
 
 # Open http://localhost:8080 in your browser
 ```
 
-#### Step 3: Test the WebSocket Server
+### Test the WebSocket Server
 
 ```bash
 # Copy WASM files to websocket-connect
@@ -142,9 +118,6 @@ wasm-pack build --target web
 
 # Run Rust tests
 cargo test
-
-# Optional: Build JavaScript wrapper with Vite
-deno task build
 ```
 
 ### Working on the WebSocket Server
@@ -238,11 +211,7 @@ webterm-dos-ansi/
 │   │   │   ├── renderer.rs     # Canvas rendering
 │   │   │   ├── cp437.rs        # CP437 codec
 │   │   │   └── dom.rs          # DOM utilities
-│   │   ├── js/
-│   │   │   └── index.js        # WASM loader
-│   │   ├── Cargo.toml
-│   │   ├── deno.json
-│   │   └── vite.config.ts
+│   │   └── Cargo.toml
 │   │
 │   ├── websocket-connect/      # WebSocket bridge server
 │   │   ├── src/

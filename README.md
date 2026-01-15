@@ -31,21 +31,35 @@ Rust and compiled to WASM for high-performance rendering in modern web browsers.
 ### Building
 
 ```bash
-# Build everything
-./_scripts/build-all.sh
+# Build the WASM library
+run/lib-build
 
-# Test the ANSI viewer
-cd dist/ansi-view
-python3 -m http.server 8080
-# Open http://localhost:8080
+# Output is in projects/lib/pkg/:
+# - webterm_dos_ansi.js
+# - webterm_dos_ansi_bg.wasm
+# - webterm_dos_ansi.d.ts
+```
+
+### Usage
+
+```javascript
+import init, { initWebTerm, renderAnsi } from '@bbs/webterm-dos-ansi';
+
+// Initialize WASM module
+await init();
+
+// Auto-discover terminals with data-term-url attribute
+initWebTerm();
+
+// Or render ANSI content directly
+renderAnsi('#container', ansiBytes, 9600); // optional baud rate
 ```
 
 ### Documentation
 
 - [GETTING_STARTED.md](GETTING_STARTED.md) - Setup and build instructions
 - [.claude/CLAUDE.md](.claude/CLAUDE.md) - Complete project documentation
-- [BUILD_STATUS.md](BUILD_STATUS.md) - Current build status and roadmap
-- [_scripts/README.md](_scripts/README.md) - Build script documentation
+- [projects/lib/README.md](projects/lib/README.md) - Library API documentation
 
 ## License
 
