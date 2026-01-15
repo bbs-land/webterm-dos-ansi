@@ -9,16 +9,71 @@ mod parser;
 mod postprocess;
 mod renderer;
 mod screen;
+mod scrollback;
+mod terminal;
 
-use parser::AnsiParser;
 use postprocess::PostProcessor;
 use renderer::{Palette, Renderer, CANVAS_HEIGHT, CANVAS_WIDTH};
-use screen::Screen;
+use scrollback::DEFAULT_MAX_LINES;
+use terminal::{setup_scrollback_events, Terminal};
+
+/// Options for rendering ANSI content.
+#[wasm_bindgen]
+pub struct RenderOptions {
+    /// CSS selector for the container element
+    selector: String,
+    /// Baud rate for rendering simulation (e.g., 2400, 9600). None for instant.
+    bps: Option<u32>,
+    /// Color palette: "CGA" or "VGA" (default)
+    palette: Option<String>,
+    /// Scrollback buffer size (default: 5000)
+    scrollback_lines: Option<u32>,
+}
+
+#[wasm_bindgen]
+impl RenderOptions {
+    /// Create new render options with required selector.
+    #[wasm_bindgen(constructor)]
+    pub fn new(selector: String) -> Self {
+        RenderOptions {
+            selector,
+            bps: None,
+            palette: None,
+            scrollback_lines: None,
+        }
+    }
+
+    /// Set baud rate for rendering simulation.
+    #[wasm_bindgen(js_name = setBps)]
+    pub fn set_bps(mut self, bps: u32) -> Self {
+        self.bps = Some(bps);
+        self
+    }
+
+    /// Set color palette ("CGA" or "VGA").
+    #[wasm_bindgen(js_name = setPalette)]
+    pub fn set_palette(mut self, palette: String) -> Self {
+        self.palette = Some(palette);
+        self
+    }
+
+    /// Set scrollback buffer size.
+    #[wasm_bindgen(js_name = setScrollbackLines)]
+    pub fn set_scrollback_lines(mut self, lines: u32) -> Self {
+        self.scrollback_lines = Some(lines);
+        self
+    }
+}
 
 /// Initialize WebTerm terminals on the page.
 ///
 /// Scans the DOM for elements with `data-term-url` attribute and initializes
 /// terminal instances for each one.
+///
+/// Supported data attributes:
+/// - `data-term-url`: WebSocket URL (required)
+/// - `data-term-palette`: Color palette ("CGA" or "VGA", default: "VGA")
+/// - `data-term-scrollback-lines`: Scrollback buffer size (default: 5000)
 #[wasm_bindgen(js_name = initWebTerm)]
 pub fn init_web_term() {
     // Set panic hook for better error messages in the browser console
@@ -52,25 +107,52 @@ fn init_terminal(container: &web_sys::Element) -> Result<(), JsValue> {
     let term_url = dom::get_data_attribute(container, "term-url")
         .ok_or_else(|| JsValue::from_str("Missing data-term-url"))?;
 
-    web_sys::console::log_1(&format!("WebTerm: Initializing terminal for {}", term_url).into());
+    // Get palette configuration (default: VGA)
+    let palette_str = dom::get_data_attribute(container, "term-palette")
+        .unwrap_or_else(|| "VGA".to_string());
+    let palette = Palette::from_str(&palette_str);
+
+    // Get scrollback lines configuration (default: 5000)
+    let scrollback_lines = dom::get_data_attribute(container, "term-scrollback-lines")
+        .and_then(|s| s.parse::<usize>().ok())
+        .unwrap_or(DEFAULT_MAX_LINES);
+
+    web_sys::console::log_1(&format!(
+        "WebTerm: Initializing terminal for {} (palette: {}, scrollback: {} lines)",
+        term_url, palette_str, scrollback_lines
+    ).into());
 
     // Create offscreen canvas for 2D rendering
-    let offscreen_canvas = dom::create_offscreen_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    let offscreen_canvas = Rc::new(dom::create_offscreen_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?);
 
     // Create display canvas with WebGL for post-processing
     let display_canvas = dom::create_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
     container.append_child(&display_canvas)?;
 
-    // Create screen and renderer (renders to offscreen canvas)
-    let screen = Screen::new();
-    let renderer = Renderer::new(&offscreen_canvas)?;
+    // Create terminal with scrollback
+    let terminal = Rc::new(RefCell::new(Terminal::with_scrollback_lines(scrollback_lines)));
+
+    // Create renderer with specified palette
+    let renderer = Rc::new(Renderer::with_palette(&offscreen_canvas, palette)?);
 
     // Create post-processor (renders to display canvas)
-    let post_processor = PostProcessor::new(&display_canvas)?;
+    let post_processor = Rc::new(PostProcessor::new(&display_canvas)?);
+
+    // Set up scrollback event listeners
+    setup_scrollback_events(
+        &display_canvas,
+        terminal.clone(),
+        renderer.clone(),
+        offscreen_canvas.clone(),
+        post_processor.clone(),
+    )?;
 
     // Initial render with post-processing
-    renderer.render(&screen)?;
-    post_processor.process(&offscreen_canvas)?;
+    {
+        let term = terminal.borrow();
+        renderer.render_with_scrollback(&term.screen, &term.scrollback)?;
+        post_processor.process(&offscreen_canvas)?;
+    }
 
     // TODO: Handle connect button and pre-connect screen
     // TODO: Set up WebSocket connection on click
@@ -81,53 +163,80 @@ fn init_terminal(container: &web_sys::Element) -> Result<(), JsValue> {
 /// Render CP437 ANSI content to a container element.
 ///
 /// # Arguments
-/// * `selector` - CSS selector for the container element
 /// * `content` - CP437 ANSI content as bytes
-/// * `bps` - Optional baud rate for rendering simulation (e.g., 2400, 9600)
-/// * `palette` - Optional color palette: "CGA" (default) or "VGA"
+/// * `options` - Render options (selector, bps, palette, scrollback_lines)
+///
+/// # Example (JavaScript)
+/// ```javascript
+/// const options = new RenderOptions("#terminal")
+///     .setBps(9600)
+///     .setPalette("CGA")
+///     .setScrollbackLines(10000);
+/// renderAnsi(content, options);
+/// ```
 #[wasm_bindgen(js_name = renderAnsi)]
-pub fn render_ansi(selector: &str, content: &[u8], bps: Option<u32>, palette: Option<String>) {
-    let palette_str = palette.as_deref().unwrap_or("VGA");
-    web_sys::console::log_1(&format!("WebTerm: Rendering ANSI to {} (bps: {:?}, palette: {})", selector, bps, palette_str).into());
+pub fn render_ansi(content: &[u8], options: RenderOptions) {
+    let palette_str = options.palette.as_deref().unwrap_or("VGA");
+    let scrollback_size = options.scrollback_lines.map(|n| n as usize).unwrap_or(DEFAULT_MAX_LINES);
+
+    web_sys::console::log_1(&format!(
+        "WebTerm: Rendering ANSI to {} (bps: {:?}, palette: {}, scrollback: {} lines)",
+        options.selector, options.bps, palette_str, scrollback_size
+    ).into());
 
     // Clone data for the async closure
-    let selector = selector.to_string();
+    let selector = options.selector.clone();
     let content = content.to_vec();
     let palette = Palette::from_str(palette_str);
+    let bps = options.bps;
 
     spawn_local(async move {
-        match render_ansi_async(&selector, &content, bps, palette).await {
+        match render_ansi_async(&selector, &content, bps, palette, scrollback_size).await {
             Ok(_) => web_sys::console::log_1(&"WebTerm: ANSI rendering complete".into()),
             Err(e) => web_sys::console::error_1(&format!("Failed to render ANSI: {:?}", e).into()),
         }
     });
 }
 
-async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>, palette: Palette) -> Result<(), JsValue> {
+async fn render_ansi_async(
+    selector: &str,
+    content: &[u8],
+    bps: Option<u32>,
+    palette: Palette,
+    scrollback_lines: usize,
+) -> Result<(), JsValue> {
     // Find container element
     let container = dom::query_selector(selector)?
         .ok_or_else(|| JsValue::from_str("Container not found"))?;
 
     // Create offscreen canvas for 2D rendering
-    let offscreen_canvas = dom::create_offscreen_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    let offscreen_canvas = Rc::new(dom::create_offscreen_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?);
 
     // Create display canvas with WebGL for post-processing
     let display_canvas = dom::create_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
     container.append_child(&display_canvas)?;
 
-    // Create screen, parser, and renderer wrapped in Rc<RefCell<>> for async access
-    let screen = Rc::new(RefCell::new(Screen::new()));
-    let parser = Rc::new(RefCell::new(AnsiParser::new()));
-    let renderer = Renderer::with_palette(&offscreen_canvas, palette)?;
+    // Create terminal with scrollback
+    let terminal = Rc::new(RefCell::new(Terminal::with_scrollback_lines(scrollback_lines)));
+
+    // Create renderer
+    let renderer = Rc::new(Renderer::with_palette(&offscreen_canvas, palette)?);
 
     // Create post-processor for blur effects
-    let post_processor = PostProcessor::new(&display_canvas)?;
+    let post_processor = Rc::new(PostProcessor::new(&display_canvas)?);
+
+    // Set up scrollback event listeners
+    setup_scrollback_events(
+        &display_canvas,
+        terminal.clone(),
+        renderer.clone(),
+        offscreen_canvas.clone(),
+        post_processor.clone(),
+    )?;
 
     match bps {
         Some(bps) if bps > 0 => {
             // BPS simulation: render in chunks with delays
-            // Calculate delay: 8 bits per byte, so bytes_per_second = bps / 8
-            // We'll render in chunks and delay between them
             let bytes_per_second = bps as f64 / 8.0;
 
             // Render approximately 30 frames per second for smooth animation
@@ -141,16 +250,16 @@ async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>, pal
 
                 // Process this chunk
                 {
-                    let mut parser = parser.borrow_mut();
-                    let mut screen = screen.borrow_mut();
-                    for &byte in &content[offset..chunk_end] {
-                        parser.process_byte(byte, &mut screen);
-                    }
+                    let mut term = terminal.borrow_mut();
+                    term.process_bytes(&content[offset..chunk_end]);
                 }
 
-                // Render current state with post-processing
-                renderer.render(&screen.borrow())?;
-                post_processor.process(&offscreen_canvas)?;
+                // Render the current view (scrollback position or live screen)
+                {
+                    let term = terminal.borrow();
+                    renderer.render_with_scrollback(&term.screen, &term.scrollback)?;
+                    post_processor.process(&offscreen_canvas)?;
+                }
 
                 offset = chunk_end;
 
@@ -162,14 +271,15 @@ async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>, pal
         }
         _ => {
             // No BPS - render immediately
-            let mut parser = parser.borrow_mut();
-            let mut screen = screen.borrow_mut();
-            for &byte in content {
-                parser.process_byte(byte, &mut screen);
+            {
+                let mut term = terminal.borrow_mut();
+                term.process_bytes(content);
             }
-            drop(parser);
-            renderer.render(&screen)?;
-            post_processor.process(&offscreen_canvas)?;
+            {
+                let term = terminal.borrow();
+                renderer.render_with_scrollback(&term.screen, &term.scrollback)?;
+                post_processor.process(&offscreen_canvas)?;
+            }
         }
     }
 

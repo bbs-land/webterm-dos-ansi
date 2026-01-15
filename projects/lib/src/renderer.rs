@@ -9,6 +9,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, ImageData};
 
 use crate::font;
 use crate::screen::Screen;
+use crate::scrollback::ScrollbackBuffer;
 
 /// Canvas dimensions (3x4 scaling per EGA pixel)
 pub const CANVAS_WIDTH: u32 = 1920;   // 80 * 8 * 3
@@ -41,11 +42,6 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    /// Create a new renderer for the given canvas with default (CGA) palette.
-    pub fn new(canvas: &HtmlCanvasElement) -> Result<Self, JsValue> {
-        Self::with_palette(canvas, Palette::default())
-    }
-
     /// Create a new renderer for the given canvas with specified palette.
     pub fn with_palette(canvas: &HtmlCanvasElement, palette: Palette) -> Result<Self, JsValue> {
         let context = canvas
@@ -70,6 +66,122 @@ impl Renderer {
                     self.render_cell(x, y, cell)?;
                 }
             }
+        }
+
+        Ok(())
+    }
+
+    /// Render the screen with scrollback overlay if active.
+    ///
+    /// If scrollback is active, renders the historical view with "SCROLLBACK" indicators.
+    /// Otherwise, renders the current screen normally.
+    pub fn render_with_scrollback(
+        &self,
+        screen: &Screen,
+        scrollback: &ScrollbackBuffer,
+    ) -> Result<(), JsValue> {
+        if !scrollback.is_active() {
+            return self.render(screen);
+        }
+
+        // Clear canvas to black
+        self.context.set_fill_style_str("#000000");
+        self.context.fill_rect(0.0, 0.0, CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64);
+
+        // Render each line from the scrollback view
+        for y in 0..25 {
+            if let Some(cga_line) = scrollback.get_display_line(y, screen) {
+                self.render_cga_line(y, &cga_line)?;
+            }
+        }
+
+        // Render "SCROLLBACK" indicators
+        self.render_scrollback_indicator()?;
+
+        Ok(())
+    }
+
+    /// Render a single line from CGA format.
+    fn render_cga_line(&self, y: usize, cga_line: &[u8; 160]) -> Result<(), JsValue> {
+        for x in 0..80 {
+            let ch = cga_line[x * 2];
+            let attr = cga_line[x * 2 + 1];
+            let fg = attr & 0x0F;
+            let bg = (attr >> 4) & 0x0F;
+            self.render_char_at(x, y, ch, fg, bg)?;
+        }
+        Ok(())
+    }
+
+    /// Render a single character at the specified position.
+    fn render_char_at(
+        &self,
+        x: usize,
+        y: usize,
+        ch: u8,
+        fg: u8,
+        bg: u8,
+    ) -> Result<(), JsValue> {
+        const SCALE_X: usize = 3;
+        const SCALE_Y: usize = 4;
+        const CELL_WIDTH: usize = font::FONT_WIDTH * SCALE_X;
+        const CELL_HEIGHT: usize = font::FONT_HEIGHT * SCALE_Y;
+
+        let px = x * CELL_WIDTH;
+        let py = y * CELL_HEIGHT;
+
+        let bitmap = font::get_char_bitmap(ch);
+        let fg_rgb = ansi_color_to_rgb_tuple(fg, self.palette);
+        let bg_rgb = ansi_color_to_rgb_tuple(bg, self.palette);
+
+        let mut pixel_data: Vec<u8> = Vec::with_capacity(CELL_WIDTH * CELL_HEIGHT * 4);
+
+        for font_y in 0..font::FONT_HEIGHT {
+            let scanline = bitmap[font_y];
+            for _ in 0..SCALE_Y {
+                for font_x in 0..font::FONT_WIDTH {
+                    let is_set = font::is_pixel_set(scanline, font_x as u8);
+                    let (r, g, b) = if is_set { fg_rgb } else { bg_rgb };
+                    for _ in 0..SCALE_X {
+                        pixel_data.push(r);
+                        pixel_data.push(g);
+                        pixel_data.push(b);
+                        pixel_data.push(255);
+                    }
+                }
+            }
+        }
+
+        let image_data = ImageData::new_with_u8_clamped_array_and_sh(
+            wasm_bindgen::Clamped(&pixel_data),
+            CELL_WIDTH as u32,
+            CELL_HEIGHT as u32,
+        )?;
+
+        self.context.put_image_data(&image_data, px as f64, py as f64)?;
+        Ok(())
+    }
+
+    /// Render the "SCROLLBACK" indicator at top-left and top-right corners.
+    fn render_scrollback_indicator(&self) -> Result<(), JsValue> {
+        let indicator = ScrollbackBuffer::scrollback_indicator();
+
+        // Render at top-left (columns 0-9)
+        for x in 0..10 {
+            let ch = indicator[x * 2];
+            let attr = indicator[x * 2 + 1];
+            let fg = attr & 0x0F;
+            let bg = (attr >> 4) & 0x0F;
+            self.render_char_at(x, 0, ch, fg, bg)?;
+        }
+
+        // Render at top-right (columns 70-79)
+        for x in 0..10 {
+            let ch = indicator[x * 2];
+            let attr = indicator[x * 2 + 1];
+            let fg = attr & 0x0F;
+            let bg = (attr >> 4) & 0x0F;
+            self.render_char_at(70 + x, 0, ch, fg, bg)?;
         }
 
         Ok(())

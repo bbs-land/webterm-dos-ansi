@@ -249,19 +249,13 @@ export default defineConfig({
 #### Building the WASM Library
 
 ```bash
-# Build the core WASM library
-cd projects/lib
+# Build the core WASM library (from project root)
+./run/lib-build
 
-# Build WASM with wasm-pack
-wasm-pack build --target web
-
-# This generates in pkg/:
-# - webterm-dos-ansi.js (JavaScript glue)
-# - webterm-dos-ansi_bg.wasm (WebAssembly binary)
-# - webterm-dos-ansi.d.ts (TypeScript definitions)
-
-# Optional: Build JavaScript wrapper with Vite (if needed)
-deno task build
+# This generates in projects/lib/pkg/:
+# - mod.js (JavaScript glue)
+# - mod.wasm (WebAssembly binary)
+# - mod.d.ts (TypeScript definitions)
 ```
 
 #### Building the WebSocket Bridge Server

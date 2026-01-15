@@ -67,12 +67,6 @@ impl Screen {
         self.cursor_y = y.min(self.height - 1);
     }
 
-    /// Clear the screen with default colors.
-    #[allow(dead_code)]
-    pub fn clear(&mut self) {
-        self.clear_with_bg(0);
-    }
-
     /// Clear the screen with specified background color.
     pub fn clear_with_bg(&mut self, bg: u8) {
         for cell in &mut self.cells {
@@ -105,5 +99,17 @@ impl Screen {
         for x in 0..self.width {
             self.cells[bottom_start + x] = Cell::default();
         }
+    }
+
+    /// Get a full line of cells at the specified row.
+    ///
+    /// Returns None if the row is out of bounds.
+    pub fn get_line(&self, y: usize) -> Option<Vec<Cell>> {
+        if y >= self.height {
+            return None;
+        }
+        let start = y * self.width;
+        let end = start + self.width;
+        Some(self.cells[start..end].to_vec())
     }
 }

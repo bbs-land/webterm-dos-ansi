@@ -4,6 +4,17 @@
 
 use crate::screen::{Cell, Screen};
 
+/// Actions that may occur during parsing that callers need to know about.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ParseAction {
+    /// No special action occurred.
+    None,
+    /// The screen was cleared (ESC[2J).
+    ScreenCleared,
+    /// A line was scrolled off the top of the screen.
+    LineScrolled,
+}
+
 /// ANSI parser state machine.
 pub struct AnsiParser {
     state: ParserState,
@@ -37,18 +48,52 @@ impl AnsiParser {
         }
     }
 
+    /// Check if the parser is in normal state (not processing an escape sequence).
+    ///
+    /// When in normal state, printable characters will be written to the screen.
+    pub fn is_in_normal_state(&self) -> bool {
+        self.state == ParserState::Normal
+    }
+
+    /// Check if the given byte will trigger a full screen clear (ESC[2J).
+    ///
+    /// This allows callers to capture the screen before it's cleared.
+    pub fn will_clear_screen(&self, byte: u8) -> bool {
+        // We're looking for ESC[2J - byte 'J' when in CSI state with param '2'
+        if self.state != ParserState::Csi {
+            return false;
+        }
+        if byte != b'J' {
+            return false;
+        }
+        // Check if param is 2 (or will be 2 after pushing current_param)
+        let param = if !self.current_param.is_empty() {
+            self.current_param.parse::<u32>().unwrap_or(0)
+        } else {
+            self.params.first().copied().unwrap_or(0)
+        };
+        param == 2
+    }
+
     /// Process a single byte and update the screen.
-    pub fn process_byte(&mut self, byte: u8, screen: &mut Screen) {
+    ///
+    /// Returns a `ParseAction` indicating if any special action occurred that
+    /// the caller may need to handle (e.g., screen clear for scrollback capture).
+    pub fn process_byte(&mut self, byte: u8, screen: &mut Screen) -> ParseAction {
         match self.state {
             ParserState::Normal => {
                 if byte == 0x1B {  // ESC
                     self.state = ParserState::Escape;
+                    ParseAction::None
                 } else if byte == b'\n' {
-                    self.handle_newline(screen);
+                    self.handle_newline(screen)
                 } else if byte == b'\r' {
                     self.handle_carriage_return(screen);
+                    ParseAction::None
                 } else if byte >= 32 {  // Printable characters
-                    self.write_char(byte, screen);
+                    self.write_char(byte, screen)
+                } else {
+                    ParseAction::None
                 }
             }
             ParserState::Escape => {
@@ -60,17 +105,21 @@ impl AnsiParser {
                     // Unknown escape sequence, return to normal
                     self.state = ParserState::Normal;
                 }
+                ParseAction::None
             }
             ParserState::Csi => {
                 if byte.is_ascii_digit() {
                     self.current_param.push(byte as char);
+                    ParseAction::None
                 } else if byte == b';' {
                     self.push_param();
+                    ParseAction::None
                 } else {
                     // Command byte
                     self.push_param();
-                    self.handle_csi_command(byte, screen);
+                    let action = self.handle_csi_command(byte, screen);
                     self.state = ParserState::Normal;
+                    action
                 }
             }
         }
@@ -85,17 +134,17 @@ impl AnsiParser {
         }
     }
 
-    fn handle_csi_command(&mut self, cmd: u8, screen: &mut Screen) {
+    fn handle_csi_command(&mut self, cmd: u8, screen: &mut Screen) -> ParseAction {
         match cmd {
-            b'H' | b'f' => self.handle_cursor_position(screen),  // Cursor position
-            b'A' => self.handle_cursor_up(screen),               // Cursor up
-            b'B' => self.handle_cursor_down(screen),             // Cursor down
-            b'C' => self.handle_cursor_forward(screen),          // Cursor forward
-            b'D' => self.handle_cursor_backward(screen),         // Cursor backward
+            b'H' | b'f' => { self.handle_cursor_position(screen); ParseAction::None }
+            b'A' => { self.handle_cursor_up(screen); ParseAction::None }
+            b'B' => { self.handle_cursor_down(screen); ParseAction::None }
+            b'C' => { self.handle_cursor_forward(screen); ParseAction::None }
+            b'D' => { self.handle_cursor_backward(screen); ParseAction::None }
             b'J' => self.handle_erase_display(screen),           // Erase display
-            b'K' => self.handle_erase_line(screen),              // Erase line
-            b'm' => self.handle_sgr(),                           // Select Graphic Rendition
-            _ => {}  // Unknown command
+            b'K' => { self.handle_erase_line(screen); ParseAction::None }
+            b'm' => { self.handle_sgr(); ParseAction::None }
+            _ => ParseAction::None  // Unknown command
         }
     }
 
@@ -129,11 +178,14 @@ impl AnsiParser {
         screen.set_cursor(x.saturating_sub(n), y);
     }
 
-    fn handle_erase_display(&self, screen: &mut Screen) {
+    fn handle_erase_display(&self, screen: &mut Screen) -> ParseAction {
         let mode = self.params.get(0).copied().unwrap_or(0);
         match mode {
-            2 => screen.clear_with_bg(self.effective_bg()),  // Clear entire screen with current bg
-            _ => {}  // TODO: Implement other erase modes
+            2 => {
+                screen.clear_with_bg(self.effective_bg());  // Clear entire screen with current bg
+                ParseAction::ScreenCleared
+            }
+            _ => ParseAction::None  // TODO: Implement other erase modes
         }
     }
 
@@ -188,7 +240,7 @@ impl AnsiParser {
         if self.blink && bg < 8 { bg + 8 } else { bg }
     }
 
-    fn write_char(&self, ch: u8, screen: &mut Screen) {
+    fn write_char(&self, ch: u8, screen: &mut Screen) -> ParseAction {
         let (x, y) = screen.cursor_pos();
         let cell = Cell {
             ch,
@@ -201,27 +253,32 @@ impl AnsiParser {
         let (width, height) = screen.dimensions();
         if x + 1 < width {
             screen.set_cursor(x + 1, y);
+            ParseAction::None
         } else {
             // Line wrap: move to start of next line
             if y + 1 < height {
                 screen.set_cursor(0, y + 1);
+                ParseAction::None
             } else {
                 // At bottom of screen, scroll up
                 screen.scroll_up();
                 screen.set_cursor(0, y);
+                ParseAction::LineScrolled
             }
         }
     }
 
-    fn handle_newline(&self, screen: &mut Screen) {
+    fn handle_newline(&self, screen: &mut Screen) -> ParseAction {
         let (_, y) = screen.cursor_pos();
         let (_, height) = screen.dimensions();
         if y + 1 < height {
             screen.set_cursor(0, y + 1);
+            ParseAction::None
         } else {
             // At bottom of screen, scroll up
             screen.scroll_up();
             screen.set_cursor(0, y);
+            ParseAction::LineScrolled
         }
     }
 

@@ -64,8 +64,8 @@ pub struct PostProcessor {
     source_texture: WebGlTexture,
     intermediate_texture: WebGlTexture,
     framebuffer: WebGlFramebuffer,
-    #[allow(dead_code)]
-    quad_buffer: WebGlBuffer,
+    /// Vertex buffer - kept alive for WebGL state, accessed via GL context not Rust
+    _quad_buffer: WebGlBuffer,
     // Uniform locations for blur program
     blur_texture_loc: WebGlUniformLocation,
     blur_resolution_loc: WebGlUniformLocation,
@@ -138,7 +138,7 @@ impl PostProcessor {
             source_texture,
             intermediate_texture,
             framebuffer,
-            quad_buffer,
+            _quad_buffer: quad_buffer,
             blur_texture_loc,
             blur_resolution_loc,
             blur_direction_loc,

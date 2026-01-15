@@ -4,7 +4,7 @@
  * Loads ANSI files and renders them using the WebTerm WASM library.
  */
 
-import init, { renderAnsi } from '/assets/lib/mod.js';
+import init, { renderAnsi, RenderOptions } from '/assets/lib/mod.js';
 
 // Get DOM elements
 const filePicker = document.getElementById('file-picker');
@@ -86,8 +86,17 @@ function renderCurrentFile() {
     // Clear previous render
     viewerContainer.innerHTML = '';
 
+    // Build render options
+    let options = new RenderOptions('#viewer-container');
+    if (currentBps) {
+        options = options.setBps(currentBps);
+    }
+    if (currentPalette) {
+        options = options.setPalette(currentPalette);
+    }
+
     // Render with current settings
-    renderAnsi('#viewer-container', currentFile, currentBps, currentPalette);
+    renderAnsi(currentFile, options);
 }
 
 // Initialize WASM module
