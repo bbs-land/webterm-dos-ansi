@@ -67,10 +67,18 @@ impl Screen {
         self.cursor_y = y.min(self.height - 1);
     }
 
-    /// Clear the screen.
+    /// Clear the screen with default colors.
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
+        self.clear_with_bg(0);
+    }
+
+    /// Clear the screen with specified background color.
+    pub fn clear_with_bg(&mut self, bg: u8) {
         for cell in &mut self.cells {
-            *cell = Cell::default();
+            cell.ch = b' ';
+            cell.fg = 7;
+            cell.bg = bg;
         }
         self.cursor_x = 0;
         self.cursor_y = 0;
@@ -79,5 +87,23 @@ impl Screen {
     /// Get screen dimensions.
     pub fn dimensions(&self) -> (usize, usize) {
         (self.width, self.height)
+    }
+
+    /// Scroll the screen up by one line.
+    /// The top line is discarded and a new blank line is added at the bottom.
+    pub fn scroll_up(&mut self) {
+        // Move all lines up by one
+        for y in 0..(self.height - 1) {
+            for x in 0..self.width {
+                let src_idx = (y + 1) * self.width + x;
+                let dst_idx = y * self.width + x;
+                self.cells[dst_idx] = self.cells[src_idx];
+            }
+        }
+        // Clear the bottom line
+        let bottom_start = (self.height - 1) * self.width;
+        for x in 0..self.width {
+            self.cells[bottom_start + x] = Cell::default();
+        }
     }
 }

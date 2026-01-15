@@ -1,0 +1,25 @@
+[47m[5m[34m[2JTest Message - Blue text on bright white background
+
+This screen was cleared with ESC[2J after setting:
+- Background: white (gray, color 7)
+- Blink attribute (makes bg bright -> color 15)
+- Foreground: blue (color 4)
+
+The entire screen should be bright white.
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25

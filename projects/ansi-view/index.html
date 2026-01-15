@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ANSI Art Viewer - BBS.land WebTerm</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
     <header>
@@ -45,6 +45,7 @@
             <button class="sample-btn" data-sample="simple.ans">Simple</button>
             <button class="sample-btn" data-sample="welcome.ans">Welcome</button>
             <button class="sample-btn" data-sample="test.ans">Test Pattern</button>
+            <button class="sample-btn" data-sample="clearscreen.ans">Clear Screen</button>
         </div>
     </div>
 
@@ -52,15 +53,10 @@
 
     <div class="info">
         <p>
-            <strong>Note:</strong> Build the WASM library first:
-            <code>cd projects/lib && wasm-pack build --target web</code>
-        </p>
-        <p>
-            Then copy the WASM files to this directory:
-            <code>cp projects/lib/pkg/webterm_dos_ansi* projects/ansi-view/</code>
+            <strong>Note:</strong> Run <code>./run/ansiview</code> from the project root to build and serve.
         </p>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="/assets/app.js"></script>
 </body>
 </html>

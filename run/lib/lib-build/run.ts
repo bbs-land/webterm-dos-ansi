@@ -50,31 +50,18 @@ for (const [oldName, newName] of renames) {
 }
 
 // Update references in mod.js
-console.log("Updating file references...");
+console.log("Updating file references in mod.js...");
 const modJsPath = join(pkgDir, "mod.js");
 let modJs = await Deno.readTextFile(modJsPath);
 modJs = modJs
-  .replace('./webterm_dos_ansi.d.ts', './mod.d.ts')
-  .replace('./webterm_dos_ansi_bg.js', './mod_bg.js')
-  .replace("'webterm_dos_ansi_bg.wasm'", "'mod.wasm'");
-
-// Minify mod.js
-console.log("Minifying mod.js...");
-const minified = await minify(modJs, {
-  module: true,
-  compress: true,
-  mangle: true,
-});
-if (!minified.code) {
-  console.error("Minification failed");
-  Deno.exit(1);
-}
-await Deno.writeTextFile(modJsPath, minified.code);
+  .replaceAll('webterm_dos_ansi_bg.wasm', 'mod.wasm');
+await Deno.writeTextFile(modJsPath, modJs);
 
 // Update references in mod.d.ts
+console.log("Updating file references in mod.d.ts...");
 const modDtsPath = join(pkgDir, "mod.d.ts");
 let modDts = await Deno.readTextFile(modDtsPath);
-modDts = modDts.replace(/webterm_dos_ansi_bg\.wasm/g, 'mod.wasm');
+modDts = modDts.replaceAll('webterm_dos_ansi_bg.wasm', 'mod.wasm');
 await Deno.writeTextFile(modDtsPath, modDts);
 
 // Patch package.json
@@ -86,9 +73,9 @@ packageJson.name = "@bbs/webterm-dos-ansi";
 packageJson.main = "mod.js";
 packageJson.types = "mod.d.ts";
 packageJson.files = [
-  "mod.wasm",
   "mod.js",
   "mod.d.ts",
+  "mod.wasm",
   "mod.wasm.d.ts",
   "README.md",
 ];
@@ -100,5 +87,19 @@ console.log("Copying README.md to pkg/...");
 const readmeSrc = join(libDir, "README.md");
 const readmeDest = join(pkgDir, "README.md");
 await Deno.copyFile(readmeSrc, readmeDest);
+
+// Minify mod.js (do this last after all text replacements)
+console.log("Minifying mod.js...");
+modJs = await Deno.readTextFile(modJsPath);
+const minified = await minify(modJs, {
+  module: true,
+  compress: true,
+  mangle: true,
+});
+if (!minified.code) {
+  console.error("Minification failed");
+  Deno.exit(1);
+}
+await Deno.writeTextFile(modJsPath, minified.code);
 
 console.log("Build complete!");

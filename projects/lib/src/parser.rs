@@ -132,7 +132,7 @@ impl AnsiParser {
     fn handle_erase_display(&self, screen: &mut Screen) {
         let mode = self.params.get(0).copied().unwrap_or(0);
         match mode {
-            2 => screen.clear(),  // Clear entire screen
+            2 => screen.clear_with_bg(self.effective_bg()),  // Clear entire screen with current bg
             _ => {}  // TODO: Implement other erase modes
         }
     }
@@ -174,30 +174,54 @@ impl AnsiParser {
         }
     }
 
+    /// Get the effective foreground color (applying bold and reverse)
+    fn effective_fg(&self) -> u8 {
+        let fg = if self.reverse { self.current_bg } else { self.current_fg };
+        // Bold makes foreground bright (add 8 if not already bright)
+        if self.bold && fg < 8 { fg + 8 } else { fg }
+    }
+
+    /// Get the effective background color (applying blink and reverse)
+    fn effective_bg(&self) -> u8 {
+        let bg = if self.reverse { self.current_fg } else { self.current_bg };
+        // Blink makes background bright (DOS behavior - no actual blinking)
+        if self.blink && bg < 8 { bg + 8 } else { bg }
+    }
+
     fn write_char(&self, ch: u8, screen: &mut Screen) {
         let (x, y) = screen.cursor_pos();
-        // Apply bold by using bright foreground color (add 8 if not already bright)
-        let fg = if self.reverse { self.current_bg } else { self.current_fg };
-        let fg = if self.bold && fg < 8 { fg + 8 } else { fg };
         let cell = Cell {
             ch,
-            fg,
-            bg: if self.reverse { self.current_fg } else { self.current_bg },
+            fg: self.effective_fg(),
+            bg: self.effective_bg(),
         };
         screen.set_cell(x, y, cell);
 
         // Move cursor forward
-        let (width, _) = screen.dimensions();
+        let (width, height) = screen.dimensions();
         if x + 1 < width {
             screen.set_cursor(x + 1, y);
+        } else {
+            // Line wrap: move to start of next line
+            if y + 1 < height {
+                screen.set_cursor(0, y + 1);
+            } else {
+                // At bottom of screen, scroll up
+                screen.scroll_up();
+                screen.set_cursor(0, y);
+            }
         }
     }
 
     fn handle_newline(&self, screen: &mut Screen) {
-        let (x, y) = screen.cursor_pos();
+        let (_, y) = screen.cursor_pos();
         let (_, height) = screen.dimensions();
         if y + 1 < height {
-            screen.set_cursor(x, y + 1);
+            screen.set_cursor(0, y + 1);
+        } else {
+            // At bottom of screen, scroll up
+            screen.scroll_up();
+            screen.set_cursor(0, y);
         }
     }
 

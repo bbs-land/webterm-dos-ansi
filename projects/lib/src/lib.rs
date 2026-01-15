@@ -1,4 +1,7 @@
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 mod dom;
 mod font;
@@ -78,13 +81,19 @@ fn init_terminal(container: &web_sys::Element) -> Result<(), JsValue> {
 pub fn render_ansi(selector: &str, content: &[u8], bps: Option<u32>) {
     web_sys::console::log_1(&format!("WebTerm: Rendering ANSI to {} (bps: {:?})", selector, bps).into());
 
-    match render_ansi_impl(selector, content, bps) {
-        Ok(_) => web_sys::console::log_1(&"WebTerm: ANSI rendering complete".into()),
-        Err(e) => web_sys::console::error_1(&format!("Failed to render ANSI: {:?}", e).into()),
-    }
+    // Clone data for the async closure
+    let selector = selector.to_string();
+    let content = content.to_vec();
+
+    spawn_local(async move {
+        match render_ansi_async(&selector, &content, bps).await {
+            Ok(_) => web_sys::console::log_1(&"WebTerm: ANSI rendering complete".into()),
+            Err(e) => web_sys::console::error_1(&format!("Failed to render ANSI: {:?}", e).into()),
+        }
+    });
 }
 
-fn render_ansi_impl(selector: &str, content: &[u8], _bps: Option<u32>) -> Result<(), JsValue> {
+async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>) -> Result<(), JsValue> {
     // Find container element
     let container = dom::query_selector(selector)?
         .ok_or_else(|| JsValue::from_str("Container not found"))?;
@@ -93,20 +102,67 @@ fn render_ansi_impl(selector: &str, content: &[u8], _bps: Option<u32>) -> Result
     let canvas = dom::create_canvas(1920, 1400)?;
     container.append_child(&canvas)?;
 
-    // Create screen, parser, and renderer
-    let mut screen = Screen::new();
-    let mut parser = AnsiParser::new();
+    // Create screen, parser, and renderer wrapped in Rc<RefCell<>> for async access
+    let screen = Rc::new(RefCell::new(Screen::new()));
+    let parser = Rc::new(RefCell::new(AnsiParser::new()));
     let renderer = Renderer::new(canvas)?;
 
-    // Parse ANSI content
-    for &byte in content {
-        parser.process_byte(byte, &mut screen);
+    match bps {
+        Some(bps) if bps > 0 => {
+            // BPS simulation: render in chunks with delays
+            // Calculate delay: 8 bits per byte, so bytes_per_second = bps / 8
+            // We'll render in chunks and delay between them
+            let bytes_per_second = bps as f64 / 8.0;
+
+            // Render approximately 30 frames per second for smooth animation
+            let target_fps = 30.0;
+            let bytes_per_frame = (bytes_per_second / target_fps).max(1.0) as usize;
+            let frame_delay_ms = (1000.0 / target_fps) as i32;
+
+            let mut offset = 0;
+            while offset < content.len() {
+                let chunk_end = (offset + bytes_per_frame).min(content.len());
+
+                // Process this chunk
+                {
+                    let mut parser = parser.borrow_mut();
+                    let mut screen = screen.borrow_mut();
+                    for &byte in &content[offset..chunk_end] {
+                        parser.process_byte(byte, &mut screen);
+                    }
+                }
+
+                // Render current state
+                renderer.render(&screen.borrow())?;
+
+                offset = chunk_end;
+
+                // Wait before next frame (unless we're done)
+                if offset < content.len() {
+                    sleep_ms(frame_delay_ms).await;
+                }
+            }
+        }
+        _ => {
+            // No BPS - render immediately
+            let mut parser = parser.borrow_mut();
+            let mut screen = screen.borrow_mut();
+            for &byte in content {
+                parser.process_byte(byte, &mut screen);
+            }
+            drop(parser);
+            renderer.render(&screen)?;
+        }
     }
 
-    // Render to canvas
-    renderer.render(&screen)?;
-
-    // TODO: Implement baud rate simulation
-
     Ok(())
+}
+
+/// Sleep for the specified number of milliseconds using JavaScript setTimeout
+async fn sleep_ms(ms: i32) {
+    let promise = js_sys::Promise::new(&mut |resolve, _| {
+        let window = web_sys::window().unwrap();
+        window.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, ms).unwrap();
+    });
+    wasm_bindgen_futures::JsFuture::from(promise).await.unwrap();
 }

@@ -38,6 +38,7 @@ web-sys = { version = "0.3", features = [
     "MouseEvent",
 ] }
 js-sys = "0.3"
+wasm-bindgen-futures = "0.4"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

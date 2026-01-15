@@ -4,9 +4,7 @@
  * Loads ANSI files and renders them using the WebTerm WASM library.
  */
 
-import init, { renderAnsi } from './webterm_dos_ansi.js';
-
-let wasmLoaded = false;
+import init, { renderAnsi } from '/assets/lib/mod.js';
 
 // Get DOM elements
 const filePicker = document.getElementById('file-picker');
@@ -56,15 +54,16 @@ sampleButtons.forEach(btn => {
         try {
             const response = await fetch(`sample/${sampleName}`);
             if (!response.ok) {
-                throw new Error(`Sample file not found: ${sampleName}`);
+                throw new Error(`HTTP ${response.status}: ${sampleName}`);
             }
             const arrayBuffer = await response.arrayBuffer();
             currentFile = new Uint8Array(arrayBuffer);
-            renderCurrentFile();
         } catch (error) {
             console.error('Error loading sample:', error);
-            alert(`Sample file not available: ${sampleName}`);
+            alert(`Failed to load sample: ${sampleName}`);
+            return;
         }
+        renderCurrentFile();
     });
 });
 
@@ -83,7 +82,6 @@ function renderCurrentFile() {
 async function initWasm() {
     try {
         await init();
-        wasmLoaded = true;
         console.log('WASM module loaded successfully');
     } catch (error) {
         console.error('Failed to load WASM:', error);
