@@ -16,7 +16,7 @@ pub fn document() -> Result<Document, JsValue> {
         .ok_or_else(|| JsValue::from_str("No document object"))
 }
 
-/// Create a canvas element with the specified dimensions.
+/// Create a canvas element with the specified dimensions and display styles.
 pub fn create_canvas(width: u32, height: u32) -> Result<HtmlCanvasElement, JsValue> {
     let doc = document()?;
     let canvas = doc
@@ -34,6 +34,19 @@ pub fn create_canvas(width: u32, height: u32) -> Result<HtmlCanvasElement, JsVal
     style.set_property("display", "block")?;
     style.set_property("image-rendering", "pixelated")?;
     style.set_property("image-rendering", "crisp-edges")?;
+
+    Ok(canvas)
+}
+
+/// Create an offscreen canvas element (no styles, not attached to DOM).
+pub fn create_offscreen_canvas(width: u32, height: u32) -> Result<HtmlCanvasElement, JsValue> {
+    let doc = document()?;
+    let canvas = doc
+        .create_element("canvas")?
+        .dyn_into::<HtmlCanvasElement>()?;
+
+    canvas.set_width(width);
+    canvas.set_height(height);
 
     Ok(canvas)
 }

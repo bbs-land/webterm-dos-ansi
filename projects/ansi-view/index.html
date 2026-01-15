@@ -37,15 +37,26 @@
                 </select>
             </label>
 
-            <button id="clear-btn">Clear</button>
-        </div>
+            <label for="palette-selector">
+                Palette:
+                <select id="palette-selector">
+                    <option value="VGA" selected>EGA/VGA</option>
+                    <option value="CGA">CGA (IBM 5153)</option>
+                </select>
+            </label>
 
-        <div class="sample-files">
-            <span>Sample files:</span>
-            <button class="sample-btn" data-sample="simple.ans">Simple</button>
-            <button class="sample-btn" data-sample="welcome.ans">Welcome</button>
-            <button class="sample-btn" data-sample="test.ans">Test Pattern</button>
-            <button class="sample-btn" data-sample="clearscreen.ans">Clear Screen</button>
+            <label for="sample-selector">
+                Sample:
+                <select id="sample-selector">
+                    <option value="">-- Select --</option>
+                    <option value="simple.ans">Simple</option>
+                    <option value="welcome.ans">Welcome</option>
+                    <option value="test.ans">Test Pattern</option>
+                    <option value="clearscreen.ans">Clear Screen</option>
+                </select>
+            </label>
+
+            <button id="clear-btn">Clear</button>
         </div>
     </div>
 

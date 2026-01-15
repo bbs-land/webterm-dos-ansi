@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CGA Color Reference Table</title>
+  <style>
+    body {
+      font-family: "Roboto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 1200px;
+      --margin: 0 auto;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 8px 12px;
+      text-align: center;
+    }
+    th {
+      background: #333;
+    }
+    tr:hover {
+      background: #2a2a2a;
+    }
+    code {
+      background: #333;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: "Inconsolata", "Consolas", "Monaco", monospace;
+    }
+    .color-swatch {
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-family: "Inconsolata", "Consolas", "Monaco", monospace;
+    }
+
+    a {
+      color: #00C4C4;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    DOS CGA/EGA Color Reference
+    (<a href="https://int10h.org/blog/2022/06/ibm-5153-color-true-cga-palette/">IBM 5153 Accurate</a>)
+  </h1>
+  <table id="ColorsTable">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Hex</th>
+        <th>ANSI FG</th>
+        <th>ANSI BG</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>0</td>
+        <td>Black</td>
+        <td><span class="color-swatch" style="background-color:#000000;color:#FFFFFF;">#000000</span></td>
+        <td><code>\e[30m</code></td>
+        <td><code>\e[40m</code></td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>Blue</td>
+        <td><span class="color-swatch" style="background-color:#0000C4;color:#FFFFFF;">#0000C4</span></td>
+        <td><code>\e[34m</code></td>
+        <td><code>\e[44m</code></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Green</td>
+        <td><span class="color-swatch" style="background-color:#00C400;color:#000000;">#00C400</span></td>
+        <td><code>\e[32m</code></td>
+        <td><code>\e[42m</code></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Cyan</td>
+        <td><span class="color-swatch" style="background-color:#00C4C4;color:#000000;">#00C4C4</span></td>
+        <td><code>\e[36m</code></td>
+        <td><code>\e[46m</code></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Red</td>
+        <td><span class="color-swatch" style="background-color:#C40000;color:#FFFFFF;">#C40000</span></td>
+        <td><code>\e[31m</code></td>
+        <td><code>\e[41m</code></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Magenta</td>
+        <td><span class="color-swatch" style="background-color:#C400C4;color:#FFFFFF;">#C400C4</span></td>
+        <td><code>\e[35m</code></td>
+        <td><code>\e[45m</code></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>Brown</td>
+        <td><span class="color-swatch" style="background-color:#C47E00;color:#000000;">#C47E00</span></td>
+        <td><code>\e[33m</code></td>
+        <td><code>\e[43m</code></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Light Gray</td>
+        <td><span class="color-swatch" style="background-color:#C4C4C4;color:#000000;">#C4C4C4</span></td>
+        <td><code>\e[37m</code></td>
+        <td><code>\e[47m</code></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>Dark Gray</td>
+        <td><span class="color-swatch" style="background-color:#4E4E4E;color:#FFFFFF;">#4E4E4E</span></td>
+        <td><code>\e[1;30m</code></td>
+        <td><code>\e[5;40m</code></td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>Light Blue</td>
+        <td><span class="color-swatch" style="background-color:#4E4EDC;color:#FFFFFF;">#4E4EDC</span></td>
+        <td><code>\e[1;34m</code></td>
+        <td><code>\e[5;44m</code></td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>Light Green</td>
+        <td><span class="color-swatch" style="background-color:#4EDC4E;color:#000000;">#4EDC4E</span></td>
+        <td><code>\e[1;32m</code></td>
+        <td><code>\e[5;42m</code></td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td>Light Cyan</td>
+        <td><span class="color-swatch" style="background-color:#4EF3F3;color:#000000;">#4EF3F3</span></td>
+        <td><code>\e[1;36m</code></td>
+        <td><code>\e[5;46m</code></td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td>Light Red</td>
+        <td><span class="color-swatch" style="background-color:#DC4E4E;color:#000000;">#DC4E4E</span></td>
+        <td><code>\e[1;31m</code></td>
+        <td><code>\e[5;41m</code></td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td>Light Magenta</td>
+        <td><span class="color-swatch" style="background-color:#F34EF3;color:#000000;">#F34EF3</span></td>
+        <td><code>\e[1;35m</code></td>
+        <td><code>\e[5;45m</code></td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td>Yellow</td>
+        <td><span class="color-swatch" style="background-color:#F3F34E;color:#000000;">#F3F34E</span></td>
+        <td><code>\e[1;33m</code></td>
+        <td><code>\e[5;43m</code></td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td>White</td>
+        <td><span class="color-swatch" style="background-color:#FFFFFF;color:#000000;">#FFFFFF</span></td>
+        <td><code>\e[1;37m</code></td>
+        <td><code>\e[5;47m</code></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

@@ -81,7 +81,7 @@ Initialize the WASM module. Must be called before using other functions.
 await init();
 ```
 
-### `renderAnsi(selector, content, bps?)`
+### `renderAnsi(selector, content, bps?, palette?)`
 
 Render CP437 ANSI content to a container element.
 
@@ -89,11 +89,18 @@ Render CP437 ANSI content to a container element.
 - `selector` (string) - CSS selector for container element
 - `content` (Uint8Array) - CP437 ANSI content as bytes
 - `bps` (number, optional) - Baud rate for simulation (300-57600)
+- `palette` (string, optional) - Color palette: `"CGA"` or `"VGA"` (default: `"VGA"`)
+  - `"VGA"` - Standard EGA/VGA colors
+  - `"CGA"` - IBM 5153-accurate CGA colors for authentic CRT appearance
 
 **Example:**
 
 ```javascript
+// Default EGA/VGA palette
 renderAnsi('#viewer', ansiBytes, 9600);
+
+// IBM 5153 CGA palette for authentic look
+renderAnsi('#viewer', ansiBytes, 9600, 'CGA');
 ```
 
 ### `initWebTerm()`
@@ -148,10 +155,14 @@ CP437 ANSI text to display before connection.
 
 - **Screen Size:** 80 columns × 25 rows
 - **Canvas Size:** 1920×1400 pixels
-- **Font:** EGA 8×14 pixels (scaled 3×4 for aspect ratio)
+- **Font:** EGA 8×14 pixels (scaled 3×4 for aspect ratio correction)
 - **Colors:** 16 ANSI colors (8 standard + 8 bright)
+- **Color Palettes:**
+  - **EGA/VGA** (default) - Standard VGA colors
+  - **CGA** - IBM 5153-accurate colors for authentic CRT appearance
 - **Character Encoding:** CP437 (DOS codepage)
 - **Escape Sequences:** VT-100/VT-102 compatible
+- **Post-Processing:** WebGL gaussian blur for smooth rendering
 
 ## Supported ANSI Sequences
 

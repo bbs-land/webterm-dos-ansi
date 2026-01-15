@@ -9,13 +9,15 @@ import init, { renderAnsi } from '/assets/lib/mod.js';
 // Get DOM elements
 const filePicker = document.getElementById('file-picker');
 const bpsSelector = document.getElementById('bps-selector');
+const paletteSelector = document.getElementById('palette-selector');
+const sampleSelector = document.getElementById('sample-selector');
 const clearBtn = document.getElementById('clear-btn');
 const viewerContainer = document.getElementById('viewer-container');
-const sampleButtons = document.querySelectorAll('.sample-btn');
 
 // Current state
 let currentFile = null;
 let currentBps = parseInt(bpsSelector.value) || null;
+let currentPalette = paletteSelector.value;
 
 // File picker handler
 filePicker.addEventListener('change', async (e) => {
@@ -25,6 +27,7 @@ filePicker.addEventListener('change', async (e) => {
     try {
         const arrayBuffer = await file.arrayBuffer();
         currentFile = new Uint8Array(arrayBuffer);
+        sampleSelector.value = ''; // Clear sample selection
         renderCurrentFile();
     } catch (error) {
         console.error('Error reading file:', error);
@@ -40,31 +43,40 @@ bpsSelector.addEventListener('change', (e) => {
     }
 });
 
+// Palette selector handler
+paletteSelector.addEventListener('change', (e) => {
+    currentPalette = e.target.value;
+    if (currentFile) {
+        renderCurrentFile();
+    }
+});
+
+// Sample selector handler
+sampleSelector.addEventListener('change', async (e) => {
+    const sampleName = e.target.value;
+    if (!sampleName) return;
+
+    try {
+        const response = await fetch(`sample/${sampleName}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${sampleName}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        currentFile = new Uint8Array(arrayBuffer);
+        filePicker.value = ''; // Clear file picker
+        renderCurrentFile();
+    } catch (error) {
+        console.error('Error loading sample:', error);
+        alert(`Failed to load sample: ${sampleName}`);
+    }
+});
+
 // Clear button handler
 clearBtn.addEventListener('click', () => {
     viewerContainer.innerHTML = '';
     currentFile = null;
     filePicker.value = '';
-});
-
-// Sample file buttons
-sampleButtons.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-        const sampleName = e.target.dataset.sample;
-        try {
-            const response = await fetch(`sample/${sampleName}`);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${sampleName}`);
-            }
-            const arrayBuffer = await response.arrayBuffer();
-            currentFile = new Uint8Array(arrayBuffer);
-        } catch (error) {
-            console.error('Error loading sample:', error);
-            alert(`Failed to load sample: ${sampleName}`);
-            return;
-        }
-        renderCurrentFile();
-    });
+    sampleSelector.value = '';
 });
 
 // Render the current file
@@ -74,8 +86,8 @@ function renderCurrentFile() {
     // Clear previous render
     viewerContainer.innerHTML = '';
 
-    // Render with current BPS setting
-    renderAnsi('#viewer-container', currentFile, currentBps);
+    // Render with current settings
+    renderAnsi('#viewer-container', currentFile, currentBps, currentPalette);
 }
 
 // Initialize WASM module

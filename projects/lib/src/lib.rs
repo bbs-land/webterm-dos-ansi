@@ -6,11 +6,13 @@ use std::cell::RefCell;
 mod dom;
 mod font;
 mod parser;
+mod postprocess;
 mod renderer;
 mod screen;
 
 use parser::AnsiParser;
-use renderer::Renderer;
+use postprocess::PostProcessor;
+use renderer::{Palette, Renderer, CANVAS_HEIGHT, CANVAS_WIDTH};
 use screen::Screen;
 
 /// Initialize WebTerm terminals on the page.
@@ -52,18 +54,23 @@ fn init_terminal(container: &web_sys::Element) -> Result<(), JsValue> {
 
     web_sys::console::log_1(&format!("WebTerm: Initializing terminal for {}", term_url).into());
 
-    // Create canvas
-    let canvas = dom::create_canvas(1920, 1400)?;
+    // Create offscreen canvas for 2D rendering
+    let offscreen_canvas = dom::create_offscreen_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
 
-    // Append canvas to container
-    container.append_child(&canvas)?;
+    // Create display canvas with WebGL for post-processing
+    let display_canvas = dom::create_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    container.append_child(&display_canvas)?;
 
-    // Create screen and renderer
+    // Create screen and renderer (renders to offscreen canvas)
     let screen = Screen::new();
-    let renderer = Renderer::new(canvas)?;
+    let renderer = Renderer::new(&offscreen_canvas)?;
 
-    // Initial render
+    // Create post-processor (renders to display canvas)
+    let post_processor = PostProcessor::new(&display_canvas)?;
+
+    // Initial render with post-processing
     renderer.render(&screen)?;
+    post_processor.process(&offscreen_canvas)?;
 
     // TODO: Handle connect button and pre-connect screen
     // TODO: Set up WebSocket connection on click
@@ -77,35 +84,44 @@ fn init_terminal(container: &web_sys::Element) -> Result<(), JsValue> {
 /// * `selector` - CSS selector for the container element
 /// * `content` - CP437 ANSI content as bytes
 /// * `bps` - Optional baud rate for rendering simulation (e.g., 2400, 9600)
+/// * `palette` - Optional color palette: "CGA" (default) or "VGA"
 #[wasm_bindgen(js_name = renderAnsi)]
-pub fn render_ansi(selector: &str, content: &[u8], bps: Option<u32>) {
-    web_sys::console::log_1(&format!("WebTerm: Rendering ANSI to {} (bps: {:?})", selector, bps).into());
+pub fn render_ansi(selector: &str, content: &[u8], bps: Option<u32>, palette: Option<String>) {
+    let palette_str = palette.as_deref().unwrap_or("VGA");
+    web_sys::console::log_1(&format!("WebTerm: Rendering ANSI to {} (bps: {:?}, palette: {})", selector, bps, palette_str).into());
 
     // Clone data for the async closure
     let selector = selector.to_string();
     let content = content.to_vec();
+    let palette = Palette::from_str(palette_str);
 
     spawn_local(async move {
-        match render_ansi_async(&selector, &content, bps).await {
+        match render_ansi_async(&selector, &content, bps, palette).await {
             Ok(_) => web_sys::console::log_1(&"WebTerm: ANSI rendering complete".into()),
             Err(e) => web_sys::console::error_1(&format!("Failed to render ANSI: {:?}", e).into()),
         }
     });
 }
 
-async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>) -> Result<(), JsValue> {
+async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>, palette: Palette) -> Result<(), JsValue> {
     // Find container element
     let container = dom::query_selector(selector)?
         .ok_or_else(|| JsValue::from_str("Container not found"))?;
 
-    // Create canvas
-    let canvas = dom::create_canvas(1920, 1400)?;
-    container.append_child(&canvas)?;
+    // Create offscreen canvas for 2D rendering
+    let offscreen_canvas = dom::create_offscreen_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+
+    // Create display canvas with WebGL for post-processing
+    let display_canvas = dom::create_canvas(CANVAS_WIDTH, CANVAS_HEIGHT)?;
+    container.append_child(&display_canvas)?;
 
     // Create screen, parser, and renderer wrapped in Rc<RefCell<>> for async access
     let screen = Rc::new(RefCell::new(Screen::new()));
     let parser = Rc::new(RefCell::new(AnsiParser::new()));
-    let renderer = Renderer::new(canvas)?;
+    let renderer = Renderer::with_palette(&offscreen_canvas, palette)?;
+
+    // Create post-processor for blur effects
+    let post_processor = PostProcessor::new(&display_canvas)?;
 
     match bps {
         Some(bps) if bps > 0 => {
@@ -132,8 +148,9 @@ async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>) -> 
                     }
                 }
 
-                // Render current state
+                // Render current state with post-processing
                 renderer.render(&screen.borrow())?;
+                post_processor.process(&offscreen_canvas)?;
 
                 offset = chunk_end;
 
@@ -152,6 +169,7 @@ async fn render_ansi_async(selector: &str, content: &[u8], bps: Option<u32>) -> 
             }
             drop(parser);
             renderer.render(&screen)?;
+            post_processor.process(&offscreen_canvas)?;
         }
     }
 
