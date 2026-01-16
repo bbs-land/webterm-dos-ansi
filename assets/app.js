@@ -4,7 +4,7 @@
  * Loads ANSI files and renders them using the WebTerm WASM library.
  */
 
-import init, { renderAnsi, RenderOptions } from '/assets/lib/mod.js';
+import init, { renderAnsi, RenderOptions } from './lib/mod.js';
 
 // Get DOM elements
 const filePicker = document.getElementById('file-picker');
