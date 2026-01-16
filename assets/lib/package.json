@@ -1,0 +1,27 @@
+{
+  "name": "@bbs/webterm-dos-ansi",
+  "type": "module",
+  "collaborators": [
+    "BBS.land"
+  ],
+  "description": "WebAssembly terminal emulator for DOS CP437 ANSI and BBS connectivity",
+  "version": "0.1.0",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bbs-land/webterm-dos-ansi"
+  },
+  "files": [
+    "mod.js",
+    "mod.d.ts",
+    "mod.wasm",
+    "mod.wasm.d.ts",
+    "README.md"
+  ],
+  "main": "mod.js",
+  "homepage": "https://bbs.land",
+  "types": "mod.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
