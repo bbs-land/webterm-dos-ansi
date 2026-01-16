@@ -64,9 +64,6 @@ A complete WebAssembly-based terminal emulator for rendering DOS CP437 ANSI art 
 
 ```
 webterm-dos-ansi/
-├── _scripts/
-│   ├── build-all.sh          ✅ Automated build script
-│   └── README.md             ✅ Build documentation
 ├── projects/
 │   ├── lib/                  ✅ WASM library (builds successfully)
 │   │   ├── src/
@@ -119,26 +116,14 @@ webterm-dos-ansi/
 
 ```bash
 # Build everything
-./_scripts/build-all.sh
-
-# Run ANSI viewer
-cd dist/ansiview
-python3 -m http.server 8080
-# Open http://localhost:8080
-
-# Test with sample files (simple.ans, welcome.ans, test.ans)
+./run/lib-build && ./run/ansiview
 ```
 
 ### Development
 
 ```bash
 # Build WASM library only
-cd projects/lib
-wasm-pack build --target web
-
-# Run WebSocket server
-cd projects/websocket-connect
-cargo run
+./run/lib-build
 ```
 
 ## Technical Details
