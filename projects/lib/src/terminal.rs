@@ -140,7 +140,10 @@ impl Terminal {
         if self.scrollback.is_active() {
             match key {
                 "Escape" => {
-                    self.scrollback.start_animated_exit();
+                    // Don't exit in viewer mode (instant render)
+                    if !self.scrollback.is_viewer_mode() {
+                        self.scrollback.start_animated_exit();
+                    }
                 }
                 "ArrowUp" => {
                     self.scrollback.scroll_up(1);
