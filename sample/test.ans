@@ -1,0 +1,24 @@
+[2J[H[1;37;44m          CP437 / ANSI Test Pattern          [0m
+
+[1;36mBox Drawing Characters:[0m
+ÚÄÂÄ¿  ÉÍËÍ»  Single and Double
+ÃÄÅÄ´  ÌÍÎÍ¹
+ÀÄÁÄÙ  ÈÍÊÍ¼
+
+[1;36mBlock Elements:[0m
+ÛÛÛ  ÜÜÜ  ßßß  ŞŞŞ  Full/Half/Quarter
+
+[1;36mShade Characters:[0m
+°°°°°  Light  (176)
+±±±±±  Medium (177)
+²²²²²  Dark   (178)
+ÛÛÛÛÛ  Solid  (219)
+
+[1;36mMiscellaneous:[0m
+ş ù      ğ   
+
+[1;33mCursor Positioning Test:[0m
+[18;10H[1;32m[At 18,10][0m
+[19;20H[1;35m[At 19,20][0m
+[20;1H
+[1;37mColors: [31mÛ[32mÛ[33mÛ[34mÛ[35mÛ[36mÛ[37mÛ [1;31mÛ[1;32mÛ[1;33mÛ[1;34mÛ[1;35mÛ[1;36mÛ[1;37mÛ[0m
