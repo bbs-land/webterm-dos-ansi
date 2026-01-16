@@ -96,7 +96,7 @@ raw TCP connections.
 │   │   │   └── webterm-dos-ansi_bg.wasm
 │   │   └── Cargo.toml
 │   │
-│   └── ansi-view/       # ANSI file viewer application
+│   └── ansiview/       # ANSI file viewer application
 │       ├── index.html   # Viewer UI with file picker and BPS dropdown
 │       ├── app.js       # File loading and viewer control logic
 │       ├── styles.css   # Viewer styles
@@ -279,8 +279,8 @@ cargo run
 #### Setting up the ANSI Viewer
 
 ```bash
-# Copy WASM library to ansi-view directory
-cd projects/ansi-view
+# Copy WASM library to ansiview directory
+cd projects/ansiview
 cp ../lib/pkg/webterm-dos-ansi.js ./
 cp ../lib/pkg/webterm-dos-ansi_bg.wasm ./
 
@@ -562,7 +562,7 @@ renderAnsi(selector, content, bps = null);
       import {
         initWebTerm,
         renderAnsi,
-      } from "/dist/webterm-dos-ansi.js";
+      } from "/dist/mod.js";
 
       // Test 1: Render ANSI immediately
       const ansiString =
@@ -570,7 +570,7 @@ renderAnsi(selector, content, bps = null);
       renderAnsi("#test1", ansiString);
 
       // Test 2: Render with 2400 bps simulation (slower, like old modems)
-      fetch("/assets/welcome.ans")
+      fetch("./assets/welcome.ans")
         .then((res) => res.arrayBuffer())
         .then((buffer) => {
           const data = new Uint8Array(buffer);
@@ -649,7 +649,7 @@ to raw TCP services (like BBS servers).
 </script>
 ```
 
-### ansi-view Application
+### ansiview Application
 
 A standalone ANSI file viewer for testing, previewing, and demonstrating ANSI
 art rendering.
@@ -665,7 +665,7 @@ art rendering.
 #### UI Structure:
 
 ```html
-<!-- projects/ansi-view/index.html -->
+<!-- projects/ansiview/index.html -->
 <div class="controls">
   <label>ANSI File: <input
       type="file"
@@ -831,7 +831,7 @@ This project is licensed under the ISC License - see the [LICENSE.md](LICENSE.md
 25. Copy WASM library to static directory
 26. Test end-to-end BBS connection
 
-#### ANSI Viewer (projects/ansi-view)
+#### ANSI Viewer (projects/ansiview)
 
 27. Create HTML viewer page with file picker
 28. Add BPS rate dropdown selector
@@ -839,5 +839,5 @@ This project is licensed under the ISC License - see the [LICENSE.md](LICENSE.md
 30. Implement viewer logic (clear on change, call renderAnsi)
 31. Add sample ANSI files for testing
 32. Create basic CSS styling
-33. Copy WASM library to ansi-view directory
+33. Copy WASM library to ansiview directory
 34. Test with various ANSI files and baud rates

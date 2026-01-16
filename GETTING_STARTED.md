@@ -21,7 +21,7 @@ The following has been set up:
 - ✅ HTML terminal connection page
 - ✅ Server configuration with static file serving
 
-### ANSI Viewer (`projects/ansi-view/`)
+### ANSI Viewer (`projects/ansiview/`)
 - ✅ HTML viewer interface
 - ✅ File picker and BPS rate selector
 - ✅ Sample ANSI files (welcome.ans, test.ans)
@@ -78,12 +78,12 @@ run/lib-build
 ### Test the ANSI Viewer
 
 ```bash
-# Copy WASM files to ansi-view
-cp projects/lib/pkg/webterm_dos_ansi.js projects/ansi-view/
-cp projects/lib/pkg/webterm_dos_ansi_bg.wasm projects/ansi-view/
+# Copy WASM files to ansiview
+cp projects/lib/pkg/webterm_dos_ansi.js projects/ansiview/
+cp projects/lib/pkg/webterm_dos_ansi_bg.wasm projects/ansiview/
 
-# Serve the ansi-view directory
-cd projects/ansi-view
+# Serve the ansiview directory
+cd projects/ansiview
 python3 -m http.server 8080
 
 # Open http://localhost:8080 in your browser
@@ -138,7 +138,7 @@ cargo build --release
 After building the WASM library and copying files:
 
 ```bash
-cd projects/ansi-view
+cd projects/ansiview
 
 # Serve with Deno
 deno serve --port 8080 .
@@ -221,7 +221,7 @@ webterm-dos-ansi/
 │   │   │   └── index.html
 │   │   └── Cargo.toml
 │   │
-│   └── ansi-view/              # ANSI file viewer
+│   └── ansiview/              # ANSI file viewer
 │       ├── index.html
 │       ├── styles.css
 │       ├── app.js

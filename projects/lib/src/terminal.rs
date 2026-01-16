@@ -168,8 +168,9 @@ impl Terminal {
     /// Handle a mouse click event.
     ///
     /// Returns true if the click was handled (exits scrollback mode).
+    /// Does nothing in viewer mode (instant render) - user must scroll manually.
     pub fn handle_click(&mut self) -> bool {
-        if self.scrollback.is_active() {
+        if self.scrollback.is_active() && !self.scrollback.is_viewer_mode() {
             self.scrollback.start_animated_exit();
             true
         } else {

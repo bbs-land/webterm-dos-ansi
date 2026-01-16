@@ -11,7 +11,7 @@ This creates a `dist/` directory with all build artifacts.
 ## Run the ANSI Viewer
 
 ```bash
-cd dist/ansi-view
+cd dist/ansiview
 python3 -m http.server 8080
 ```
 
@@ -66,7 +66,7 @@ cd projects/lib
 cargo watch -x 'build --target wasm32-unknown-unknown'
 
 # In another terminal - serve viewer
-cd projects/ansi-view
+cd projects/ansiview
 python3 -m http.server 8080
 ```
 

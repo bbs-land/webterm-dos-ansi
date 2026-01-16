@@ -39,8 +39,8 @@ echo ""
 
 # Create dist subdirectories
 mkdir -p "$DIST_DIR/lib"
-mkdir -p "$DIST_DIR/ansi-view"
-mkdir -p "$DIST_DIR/ansi-view/sample"
+mkdir -p "$DIST_DIR/ansiview"
+mkdir -p "$DIST_DIR/ansiview/sample"
 mkdir -p "$DIST_DIR/websocket-connect/static"
 
 # Copy WASM library artifacts
@@ -71,18 +71,18 @@ echo "   ✓ WASM library copied"
 echo ""
 
 # Copy ANSI viewer
-echo "📦 Copying ANSI viewer to dist/ansi-view..."
-cd "$WORKSPACE_ROOT/projects/ansi-view"
-cp index.html "$DIST_DIR/ansi-view/"
-cp styles.css "$DIST_DIR/ansi-view/"
-cp app.js "$DIST_DIR/ansi-view/"
-cp test.html "$DIST_DIR/ansi-view/"
-cp README.md "$DIST_DIR/ansi-view/"
-cp sample/*.ans "$DIST_DIR/ansi-view/sample/"
-cp sample/CP437_REFERENCE.md "$DIST_DIR/ansi-view/sample/"
-# Copy WASM files to ansi-view
-cp "$DIST_DIR/lib/webterm_dos_ansi.js" "$DIST_DIR/ansi-view/"
-cp "$DIST_DIR/lib/webterm_dos_ansi_bg.wasm" "$DIST_DIR/ansi-view/"
+echo "📦 Copying ANSI viewer to dist/ansiview..."
+cd "$WORKSPACE_ROOT/projects/ansiview"
+cp index.html "$DIST_DIR/ansiview/"
+cp styles.css "$DIST_DIR/ansiview/"
+cp app.js "$DIST_DIR/ansiview/"
+cp test.html "$DIST_DIR/ansiview/"
+cp README.md "$DIST_DIR/ansiview/"
+cp sample/*.ans "$DIST_DIR/ansiview/sample/"
+cp sample/CP437_REFERENCE.md "$DIST_DIR/ansiview/sample/"
+# Copy WASM files to ansiview
+cp "$DIST_DIR/lib/webterm_dos_ansi.js" "$DIST_DIR/ansiview/"
+cp "$DIST_DIR/lib/webterm_dos_ansi_bg.wasm" "$DIST_DIR/ansiview/"
 echo "   ✓ ANSI viewer copied"
 echo ""
 
@@ -127,7 +127,7 @@ lib/                    - WASM library artifacts
   webterm_dos_ansi_bg.wasm - WebAssembly binary
   webterm_dos_ansi.d.ts - TypeScript definitions
 
-ansi-view/              - ANSI art viewer application
+ansiview/              - ANSI art viewer application
   index.html            - Main viewer page
   test.html             - Simple test page
   app.js                - Viewer application logic
@@ -141,7 +141,7 @@ websocket-connect/      - WebSocket to TCP bridge server (optional)
 Usage:
 ------
 ANSI Viewer:
-  cd ansi-view
+  cd ansiview
   python3 -m http.server 8080
   # Open http://localhost:8080
 
@@ -166,7 +166,7 @@ echo ""
 echo "📁 Distribution directory: $DIST_DIR"
 echo ""
 echo "🎯 Next steps:"
-echo "   cd dist/ansi-view"
+echo "   cd dist/ansiview"
 echo "   python3 -m http.server 8080"
 echo "   # Open http://localhost:8080"
 echo ""

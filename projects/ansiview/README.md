@@ -8,7 +8,7 @@ A standalone viewer for CP437 ANSI art files using the WebTerm WASM library.
    ```bash
    cd ../lib
    wasm-pack build --target web
-   cp pkg/webterm_dos_ansi.js pkg/webterm_dos_ansi_bg.wasm ../ansi-view/
+   cp pkg/webterm_dos_ansi.js pkg/webterm_dos_ansi_bg.wasm ../ansiview/
    ```
 
 2. **Serve the viewer**:

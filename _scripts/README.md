@@ -28,7 +28,7 @@ dist/
 │   ├── webterm_dos_ansi_bg.wasm
 │   ├── webterm_dos_ansi.d.ts
 │   └── package.json
-├── ansi-view/                  # Viewer application
+├── ansiview/                  # Viewer application
 │   ├── index.html
 │   ├── app.js
 │   ├── styles.css
@@ -60,7 +60,7 @@ dist/
 After building, test the ANSI viewer:
 
 ```bash
-cd dist/ansi-view
+cd dist/ansiview
 python3 -m http.server 8080
 # Open http://localhost:8080
 ```

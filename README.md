@@ -4,6 +4,9 @@ A WebAssembly-based terminal emulator library for rendering DOS CP437 ANSI art
 and connecting to BBS (Bulletin Board System) servers via WebSocket. Built with
 Rust and compiled to WASM for high-performance rendering in modern web browsers.
 
+- [ANSI Viewer Demo](https://bbs-land.github.io/webterm-dos-ansi/)
+- WebSocket Terminal Demo - Coming Soon
+
 ## Features
 
 - **CP437 Character Set**: Full support for the classic DOS codepage including
@@ -18,13 +21,16 @@ Rust and compiled to WASM for high-performance rendering in modern web browsers.
   simulation
 - **Retro Experience**: Optional baud rate simulation (300-57600 bps) for
   authentic modem feel
+- **Scrollback**: Mouse wheel or Alt+K keyboard hotkey
+- **Full Screen Mode**: Alt+Enter
+
 
 ## Project Structure
 
 - **`projects/lib/`** - Main WASM library (Rust + wasm-pack)
 - **`projects/websocket-connect/`** - WebSocket-to-TCP bridge server (Rust +
   Axum)
-- **`projects/ansi-view/`** - Standalone ANSI file viewer application
+- **`projects/ansiview/`** - Standalone ANSI file viewer application
 
 ## Quick Start
 
@@ -32,12 +38,14 @@ Rust and compiled to WASM for high-performance rendering in modern web browsers.
 
 ```bash
 # Build the WASM library
-run/lib-build
-
+./run/lib-build
 # Output is in projects/lib/pkg/:
-# - webterm_dos_ansi.js
-# - webterm_dos_ansi_bg.wasm
-# - webterm_dos_ansi.d.ts
+```
+
+#### Building and running Ansi View test app
+
+```bash
+./run/lib-build && ./run/ansiview 
 ```
 
 ### Usage
@@ -51,7 +59,7 @@ await init();
 // Auto-discover terminals with data-term-url attribute
 initWebTerm();
 
-// Or render ANSI content directly
+// Or render ANSI content directly - no bps means instant render in viewer mode
 renderAnsi('#container', ansiBytes, 9600); // optional baud rate
 ```
 

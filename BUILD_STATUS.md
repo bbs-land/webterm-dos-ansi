@@ -42,7 +42,7 @@
 The ANSI viewer is ready to run:
 
 ```bash
-cd projects/ansi-view
+cd projects/ansiview
 python3 -m http.server 8080
 # Open http://localhost:8080
 ```
@@ -137,7 +137,7 @@ cd projects/lib
 wasm-pack build --target web
 
 # Run ANSI viewer
-cd ../ansi-view
+cd ../ansiview
 python3 -m http.server 8080
 
 # Run WebSocket server (not yet functional)
@@ -150,7 +150,7 @@ cargo run
 All sample ANSI files now use proper CP437 encoding:
 
 ```bash
-$ file projects/ansi-view/sample/*.ans
+$ file projects/ansiview/sample/*.ans
 simple.ans:  ISO-8859 text, with escape sequences
 test.ans:    data
 welcome.ans: data

@@ -73,7 +73,8 @@ impl Renderer {
 
     /// Render the screen with scrollback overlay if active.
     ///
-    /// If scrollback is active, renders the historical view with "SCROLLBACK" indicators.
+    /// If scrollback is active, renders the historical view with "SCROLLBACK" indicators
+    /// (unless in viewer mode, which hides indicators).
     /// Otherwise, renders the current screen normally.
     pub fn render_with_scrollback(
         &self,
@@ -95,8 +96,10 @@ impl Renderer {
             }
         }
 
-        // Render "SCROLLBACK" indicators
-        self.render_scrollback_indicator()?;
+        // Render "SCROLLBACK" indicators (unless in viewer mode)
+        if scrollback.should_show_indicators() {
+            self.render_scrollback_indicator()?;
+        }
 
         Ok(())
     }

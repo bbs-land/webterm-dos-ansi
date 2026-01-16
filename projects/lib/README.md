@@ -57,7 +57,7 @@ renderAnsi('#terminal-container', ansiFile, 2400);
 <!-- Terminal container with data attributes -->
 <div
   data-term-url="wss://bbs.example.com/ws"
-  data-term-connect-button="/assets/connect.png"
+  data-term-connect-button="./assets/connect.png"
   data-term-preconnect-screen="Click to connect..."
 ></div>
 
@@ -263,7 +263,7 @@ ISC License - Copyright © 2026 BBS.land
 
 - [GitHub Repository](https://github.com/bbs-land/webterm-dos-ansi)
 - [Documentation](https://github.com/bbs-land/webterm-dos-ansi/blob/main/.claude/CLAUDE.md)
-- [Examples](https://github.com/bbs-land/webterm-dos-ansi/tree/main/projects/ansi-view)
+- [Examples](https://github.com/bbs-land/webterm-dos-ansi/tree/main/projects/ansiview)
 
 ## Support
 

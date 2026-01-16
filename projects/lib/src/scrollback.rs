@@ -39,6 +39,9 @@ pub struct ScrollbackBuffer {
     viewport_position: usize,
     /// Whether we're animating scroll-to-bottom exit
     animating_exit: bool,
+    /// Viewer mode: like keyboard mode but hides indicators and never auto-exits
+    /// Used for instant render (no BPS) to show content from the top
+    viewer_mode: bool,
 }
 
 impl ScrollbackBuffer {
@@ -56,6 +59,7 @@ impl ScrollbackBuffer {
             keyboard_entry: false,
             viewport_position: 0,
             animating_exit: false,
+            viewer_mode: false,
         }
     }
 
@@ -149,11 +153,42 @@ impl ScrollbackBuffer {
         if !self.active && !self.history.is_empty() {
             self.active = true;
             self.keyboard_entry = true;
-            // Start at current view - absolute position where viewport top would be
-            // This is history.len() - SCREEN_HEIGHT lines back, but clamped to 0
-            // Actually start showing the "current" view, which would be end of history
-            self.viewport_position = self.history.len().saturating_sub(SCREEN_HEIGHT);
+            // Start showing the current screen (not scrolled back).
+            // Virtual buffer is [history...][current_screen_25_lines].
+            // viewport_position = history.len() means viewport starts at the current screen.
+            self.viewport_position = self.history.len();
         }
+    }
+
+    /// Enter viewer mode - scrollback at the top of content with no indicators.
+    ///
+    /// Used for instant render (no BPS) to show content from the beginning.
+    /// In viewer mode:
+    /// - No "SCROLLBACK" indicators are shown
+    /// - Scrolling to bottom does NOT auto-exit
+    /// - Viewport starts at the top (position 0)
+    pub fn enter_viewer_mode(&mut self) {
+        if !self.history.is_empty() {
+            self.active = true;
+            self.keyboard_entry = true; // Use keyboard-style absolute positioning
+            self.viewer_mode = true;
+            // Start at the very top of history
+            self.viewport_position = 0;
+        }
+    }
+
+    /// Check if currently in viewer mode.
+    ///
+    /// Viewer mode is used for instant render - click should not exit.
+    pub fn is_viewer_mode(&self) -> bool {
+        self.viewer_mode
+    }
+
+    /// Check if scrollback indicators should be shown.
+    ///
+    /// Returns true if in scrollback mode but NOT in viewer mode.
+    pub fn should_show_indicators(&self) -> bool {
+        self.active && !self.viewer_mode
     }
 
     /// Exit scrollback viewing mode immediately (no animation).
@@ -162,6 +197,7 @@ impl ScrollbackBuffer {
         self.keyboard_entry = false;
         self.viewport_position = 0;
         self.animating_exit = false;
+        self.viewer_mode = false;
     }
 
     /// Start animated exit - scrolls to bottom over time.
@@ -218,26 +254,10 @@ impl ScrollbackBuffer {
         self.animating_exit
     }
 
-    /// Cancel exit animation and stay in scrollback at current position.
-    ///
-    /// Returns true if animation was cancelled, false if not animating.
-    /// After cancellation, scrollback remains active in mouse mode at the
-    /// current animated viewport position.
-    pub fn cancel_animation(&mut self) -> bool {
-        if self.animating_exit {
-            self.animating_exit = false;
-            // Already in mouse mode with correct viewport_position from animation
-            true
-        } else {
-            false
-        }
-    }
-
     /// Toggle scrollback viewing mode (keyboard-initiated).
     pub fn toggle_scrollback(&mut self) {
         // If animating exit, cancel and stay at current position
         if self.animating_exit {
-            let old_pos = self.viewport_position;
             self.animating_exit = false;
             // Switch to keyboard mode at current position
             // Convert mouse-style offset to keyboard-style absolute position
@@ -245,18 +265,10 @@ impl ScrollbackBuffer {
             let view_start = total_virtual_lines.saturating_sub(SCREEN_HEIGHT + self.viewport_position);
             self.viewport_position = view_start;
             self.keyboard_entry = true;
-            web_sys::console::log_1(&format!(
-                "toggle_scrollback: cancelled animation, mouse offset {} -> keyboard pos {} (history: {})",
-                old_pos, view_start, self.history.len()
-            ).into());
             return;
         }
 
         if self.active {
-            web_sys::console::log_1(&format!(
-                "toggle_scrollback: starting animated exit from pos {} (keyboard: {})",
-                self.viewport_position, self.keyboard_entry
-            ).into());
             self.start_animated_exit();
         } else {
             self.enter_scrollback_keyboard();
@@ -283,18 +295,13 @@ impl ScrollbackBuffer {
     /// Scroll up (back in history) by the specified number of lines.
     ///
     /// Entering scrollback mode if not already active.
-    /// If animating exit, cancels animation and stays at current position.
+    /// If animating exit, cancels animation and continues scrolling from current position.
     pub fn scroll_up(&mut self, lines: usize) {
         // If animating exit, cancel and stay in mouse mode at current position
         if self.animating_exit {
-            let old_pos = self.viewport_position;
             self.animating_exit = false;
             // Already in mouse mode with correct viewport_position, just continue scrolling
             self.viewport_position = (self.viewport_position + lines).min(self.history.len());
-            web_sys::console::log_1(&format!(
-                "scroll_up: cancelled animation, pos {} + {} = {} (history: {})",
-                old_pos, lines, self.viewport_position, self.history.len()
-            ).into());
             return;
         }
 

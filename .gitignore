@@ -1,6 +1,8 @@
 # BBS.land webterm-dos-ansi .gitignore
 # Combines Rust, Node, and Deno templates
 
+projects/ansiview/assets/lib/
+
 ###################
 # Rust
 ###################
@@ -207,5 +209,5 @@ temp/
 # Built WASM files in project directories
 projects/websocket-connect/static/webterm-dos-ansi.js
 projects/websocket-connect/static/webterm-dos-ansi_bg.wasm
-projects/ansi-view/webterm-dos-ansi.js
-projects/ansi-view/webterm-dos-ansi_bg.wasm
+projects/ansiview/webterm-dos-ansi.js
+projects/ansiview/webterm-dos-ansi_bg.wasm

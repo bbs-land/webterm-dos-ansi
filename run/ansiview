@@ -3,25 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LIB_PKG="$PROJECT_ROOT/projects/lib/pkg"
-ANSI_VIEW="$PROJECT_ROOT/projects/ansi-view"
-ASSETS_LIB="$ANSI_VIEW/assets/lib"
+ANSI_VIEW="$PROJECT_ROOT/projects/ansiview"
 
-# Check if lib/pkg exists and has content, build if not
-if [ ! -d "$LIB_PKG" ] || [ -z "$(ls -A "$LIB_PKG" 2>/dev/null)" ]; then
-    echo "lib/pkg directory is empty or does not exist. Building library..."
-    if ! "$SCRIPT_DIR/lib-build"; then
-        echo "Error: lib-build failed." >&2
-        exit 1
-    fi
+if ! "$SCRIPT_DIR/ansiview-lib-current"; then
+    echo "ERROR: Failed to update ansiview assetss/lib/."
+    exit 1
 fi
-
-# Clear and recreate assets/lib directory
-echo "Copying library files..."
-rm -rf "$ASSETS_LIB"
-mkdir -p "$ASSETS_LIB"
-cp -r "$LIB_PKG"/* "$ASSETS_LIB/"
-echo "Library files copied to assets/lib/"
 
 # Start the file server
 echo "Starting file server..."

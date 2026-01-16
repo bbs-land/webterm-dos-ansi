@@ -16,7 +16,7 @@ A complete WebAssembly-based terminal emulator for rendering DOS CP437 ANSI art 
    - Canvas renderer (1920×1400px, 3×4 pixel scaling)
    - **Built successfully** ✅
 
-2. **ANSI Viewer** (`projects/ansi-view/`)
+2. **ANSI Viewer** (`projects/ansiview/`)
    - Standalone web application for viewing ANSI art
    - File picker for local .ANS files
    - Baud rate simulation (300-57600 bps)
@@ -78,7 +78,7 @@ webterm-dos-ansi/
 │   │   │   └── dom.rs        ✅ DOM utilities
 │   │   ├── pkg/              ✅ Generated WASM artifacts
 │   │   └── Cargo.toml        ✅ Configured
-│   ├── ansi-view/            ✅ Complete viewer
+│   ├── ansiview/            ✅ Complete viewer
 │   │   ├── index.html        ✅ Main viewer UI
 │   │   ├── test.html         ✅ Simple test page
 │   │   ├── app.js            ✅ WASM integration
@@ -122,7 +122,7 @@ webterm-dos-ansi/
 ./_scripts/build-all.sh
 
 # Run ANSI viewer
-cd dist/ansi-view
+cd dist/ansiview
 python3 -m http.server 8080
 # Open http://localhost:8080
 

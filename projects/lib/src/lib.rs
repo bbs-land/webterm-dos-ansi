@@ -273,10 +273,15 @@ async fn render_ansi_async(
             }
         }
         _ => {
-            // No BPS - render immediately
+            // No BPS - render immediately and enter viewer mode at top
             {
                 let mut term = terminal.borrow_mut();
                 term.process_bytes(content);
+            }
+            // Enter viewer mode: show content from the top with no indicators
+            {
+                let mut term = terminal.borrow_mut();
+                term.scrollback.enter_viewer_mode();
             }
             {
                 let term = terminal.borrow();
