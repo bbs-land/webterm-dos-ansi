@@ -247,8 +247,17 @@ pub fn setup_scrollback_events(
         let renderer = renderer.clone();
         let offscreen_canvas = offscreen_canvas.clone();
         let post_processor = post_processor.clone();
+        let canvas_for_fullscreen = canvas.clone();
 
         let closure = Closure::<dyn Fn(KeyboardEvent)>::new(move |event: KeyboardEvent| {
+            // Handle Alt+Enter for fullscreen toggle
+            if event.key() == "Enter" && event.alt_key() {
+                event.prevent_default();
+                event.stop_propagation();
+                toggle_fullscreen(&canvas_for_fullscreen);
+                return;
+            }
+
             let mut term = terminal.borrow_mut();
             let was_animating = term.scrollback.is_animating_exit();
             if term.handle_key(&event.key(), event.alt_key()) {
@@ -396,4 +405,31 @@ fn start_exit_animation(
     let _ = window.request_animation_frame(
         g.borrow().as_ref().unwrap().as_ref().unchecked_ref()
     );
+}
+
+/// Toggle fullscreen mode for the canvas element.
+///
+/// When entering fullscreen:
+/// - The canvas fills the screen height (or width if aspect ratio requires)
+/// - Black background fills any remaining space
+/// - Canvas maintains its native aspect ratio (~1.37:1 for 1920x1400)
+///
+/// Uses the Fullscreen API with fallbacks for different browsers.
+fn toggle_fullscreen(canvas: &HtmlCanvasElement) {
+    let document = match web_sys::window().and_then(|w| w.document()) {
+        Some(d) => d,
+        None => return,
+    };
+
+    // Check if we're currently in fullscreen
+    let fullscreen_element = document.fullscreen_element();
+
+    if fullscreen_element.is_some() {
+        // Exit fullscreen
+        document.exit_fullscreen();
+    } else {
+        // Enter fullscreen - request on the canvas element
+        // The canvas will be centered with black background automatically
+        let _ = canvas.request_fullscreen();
+    }
 }
