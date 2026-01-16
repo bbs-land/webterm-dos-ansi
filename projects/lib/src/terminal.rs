@@ -102,14 +102,19 @@ impl Terminal {
     pub fn handle_wheel(&mut self, delta_y: f64) -> bool {
         let was_active = self.scrollback.is_active();
 
+        // Convert wheel delta to line count
+        // Typical wheel events are ~100-150 pixels per "click"
+        // We want roughly 3 lines per wheel click for responsive scrolling
+        let lines = ((delta_y.abs() / 40.0).ceil() as usize).max(1);
+
         if delta_y < 0.0 {
             // Scroll up (back in history)
-            self.scrollback.scroll_up(1);
+            self.scrollback.scroll_up(lines);
             true
         } else if delta_y > 0.0 {
             // Scroll down (toward present)
             if was_active {
-                self.scrollback.scroll_down(1);
+                self.scrollback.scroll_down(lines);
                 true // Capture the event even if we just exited scrollback
             } else {
                 false
@@ -189,7 +194,14 @@ pub fn setup_scrollback_events(
     offscreen_canvas: Rc<HtmlCanvasElement>,
     post_processor: Rc<PostProcessor>,
 ) -> Result<(), JsValue> {
-    // Set up wheel event listener
+    // Make canvas focusable for keyboard events
+    canvas.set_tab_index(0);
+
+    // Create options for passive: false (required to preventDefault on wheel)
+    let wheel_options = web_sys::AddEventListenerOptions::new();
+    wheel_options.set_passive(false);
+
+    // Set up wheel event listener with passive: false
     {
         let terminal = terminal.clone();
         let renderer = renderer.clone();
@@ -197,12 +209,13 @@ pub fn setup_scrollback_events(
         let post_processor = post_processor.clone();
 
         let closure = Closure::<dyn Fn(WheelEvent)>::new(move |event: WheelEvent| {
+            // Always capture wheel events on canvas to prevent page scrolling
+            event.prevent_default();
+            event.stop_propagation();
+
             let mut term = terminal.borrow_mut();
             let was_animating = term.scrollback.is_animating_exit();
             if term.handle_wheel(event.delta_y()) {
-                event.prevent_default();
-                event.stop_propagation();
-
                 // Re-render with scrollback
                 let _ = renderer.render_with_scrollback(&term.screen, &term.scrollback);
                 let _ = post_processor.process(&offscreen_canvas);
@@ -220,11 +233,15 @@ pub fn setup_scrollback_events(
             }
         });
 
-        canvas.add_event_listener_with_callback("wheel", closure.as_ref().unchecked_ref())?;
+        canvas.add_event_listener_with_callback_and_add_event_listener_options(
+            "wheel",
+            closure.as_ref().unchecked_ref(),
+            &wheel_options,
+        )?;
         closure.forget(); // Keep the closure alive
     }
 
-    // Set up keyboard event listener
+    // Set up keyboard event listener on the canvas itself (requires focus)
     {
         let terminal = terminal.clone();
         let renderer = renderer.clone();
@@ -255,20 +272,23 @@ pub fn setup_scrollback_events(
             }
         });
 
-        // Add to window for keyboard events (canvas needs to be focusable)
-        let window = web_sys::window().ok_or("No window")?;
-        window.add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
+        // Add to canvas directly for keyboard events (canvas is now focusable)
+        canvas.add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
-    // Set up click event listener for exiting scrollback
+    // Set up click event listener for exiting scrollback and focusing canvas
     {
         let terminal = terminal.clone();
         let renderer = renderer.clone();
         let offscreen_canvas = offscreen_canvas.clone();
         let post_processor = post_processor.clone();
+        let canvas_clone = canvas.clone();
 
         let closure = Closure::<dyn Fn(MouseEvent)>::new(move |event: MouseEvent| {
+            // Focus the canvas on click so it receives keyboard events
+            let _ = canvas_clone.focus();
+
             let mut term = terminal.borrow_mut();
             let was_animating = term.scrollback.is_animating_exit();
             if term.handle_click() {
@@ -296,8 +316,20 @@ pub fn setup_scrollback_events(
         closure.forget();
     }
 
-    // Make canvas focusable for keyboard events
-    canvas.set_tab_index(0);
+    // Set up mousedown event listener to prevent bubbling (especially for middle-click scroll)
+    {
+        let closure = Closure::<dyn Fn(MouseEvent)>::new(move |event: MouseEvent| {
+            // Prevent default for middle mouse button (scroll wheel click)
+            // This stops the auto-scroll behavior in browsers
+            if event.button() == 1 {
+                event.prevent_default();
+                event.stop_propagation();
+            }
+        });
+
+        canvas.add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
+        closure.forget();
+    }
 
     Ok(())
 }

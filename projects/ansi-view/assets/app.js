@@ -10,14 +10,61 @@ import init, { renderAnsi, RenderOptions } from '/assets/lib/mod.js';
 const filePicker = document.getElementById('file-picker');
 const bpsSelector = document.getElementById('bps-selector');
 const paletteSelector = document.getElementById('palette-selector');
+const sizeSelector = document.getElementById('size-selector');
 const sampleSelector = document.getElementById('sample-selector');
 const clearBtn = document.getElementById('clear-btn');
 const viewerContainer = document.getElementById('viewer-container');
 
+// LocalStorage keys
+const STORAGE_KEYS = {
+    bps: 'ansiview-bps',
+    palette: 'ansiview-palette',
+    size: 'ansiview-size',
+};
+
 // Current state
 let currentFile = null;
-let currentBps = parseInt(bpsSelector.value) || null;
-let currentPalette = paletteSelector.value;
+let currentBps = null;
+let currentPalette = null;
+let currentSize = null;
+
+// Apply size class to container
+function applySize() {
+    // Remove all size classes
+    viewerContainer.classList.remove('size-640', 'size-960', 'size-1280');
+    // Add the selected size class if not "Fit"
+    if (currentSize) {
+        viewerContainer.classList.add(`size-${currentSize}`);
+    }
+}
+
+// Load saved settings from localStorage and apply them
+function loadSavedSettings() {
+    const savedBps = localStorage.getItem(STORAGE_KEYS.bps);
+    const savedPalette = localStorage.getItem(STORAGE_KEYS.palette);
+    const savedSize = localStorage.getItem(STORAGE_KEYS.size);
+
+    if (savedBps !== null) {
+        bpsSelector.value = savedBps;
+    }
+    if (savedPalette !== null) {
+        paletteSelector.value = savedPalette;
+    }
+    if (savedSize !== null) {
+        sizeSelector.value = savedSize;
+    }
+
+    // Update current state from (possibly restored) selector values
+    currentBps = parseInt(bpsSelector.value) || null;
+    currentPalette = paletteSelector.value;
+    currentSize = sizeSelector.value;
+
+    // Apply initial size
+    applySize();
+}
+
+// Load settings on startup
+loadSavedSettings();
 
 // File picker handler
 filePicker.addEventListener('change', async (e) => {
@@ -38,6 +85,7 @@ filePicker.addEventListener('change', async (e) => {
 // BPS selector handler
 bpsSelector.addEventListener('change', (e) => {
     currentBps = parseInt(e.target.value) || null;
+    localStorage.setItem(STORAGE_KEYS.bps, e.target.value);
     if (currentFile) {
         renderCurrentFile();
     }
@@ -46,9 +94,17 @@ bpsSelector.addEventListener('change', (e) => {
 // Palette selector handler
 paletteSelector.addEventListener('change', (e) => {
     currentPalette = e.target.value;
+    localStorage.setItem(STORAGE_KEYS.palette, e.target.value);
     if (currentFile) {
         renderCurrentFile();
     }
+});
+
+// Size selector handler
+sizeSelector.addEventListener('change', (e) => {
+    currentSize = e.target.value;
+    localStorage.setItem(STORAGE_KEYS.size, e.target.value);
+    applySize();
 });
 
 // Sample selector handler
@@ -85,6 +141,9 @@ function renderCurrentFile() {
 
     // Clear previous render
     viewerContainer.innerHTML = '';
+
+    // Apply current size
+    applySize();
 
     // Build render options
     let options = new RenderOptions('#viewer-container');

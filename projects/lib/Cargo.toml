@@ -37,6 +37,7 @@ web-sys = { version = "0.3", features = [
     "KeyboardEvent",
     "MouseEvent",
     "WheelEvent",
+    "AddEventListenerOptions",
     # WebGL features for post-processing
     "WebGlRenderingContext",
     "WebGlShader",

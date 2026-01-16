@@ -234,6 +234,9 @@ async fn render_ansi_async(
         post_processor.clone(),
     )?;
 
+    // Focus the canvas so it can receive keyboard events for scrollback
+    let _ = display_canvas.focus();
+
     match bps {
         Some(bps) if bps > 0 => {
             // BPS simulation: render in chunks with delays

@@ -143,8 +143,26 @@ button:disabled {
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    background: #000;
+    background: transparent;
     min-height: 600px;
+}
+
+#viewer-container.size-640 {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#viewer-container.size-960 {
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#viewer-container.size-1280 {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #viewer-container:empty::before {
