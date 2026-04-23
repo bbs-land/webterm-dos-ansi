@@ -67,16 +67,18 @@ export interface InitOutput {
     readonly renderoptions_setBps: (a: number, b: number) => number;
     readonly renderoptions_setPalette: (a: number, b: number, c: number) => number;
     readonly renderoptions_setScrollbackLines: (a: number, b: number) => number;
-    readonly __wasm_bindgen_func_elem_107: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_913: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_1007: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_145: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_928: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_144: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_975: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_980: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_167: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_167_2: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_167_3: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_166: (a: number, b: number) => void;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;
     readonly __wbindgen_export4: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_export5: (a: number, b: number) => void;
+    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;
